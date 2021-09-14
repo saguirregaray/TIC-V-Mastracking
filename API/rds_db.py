@@ -12,16 +12,16 @@ conn = pymysql.connect(
 '''TEMPERATURE'''
 
 
-def insert_temperature(process_id, temperature, timestamp):
+def insert_temperature(id, temperature, timestamp, process_id):
     cur = conn.cursor()
-    cur.execute(f"INSERT INTO Temperatures (process_id, temperature, timestamp) "
-                f"VALUES ({process_id}, {temperature}, {timestamp})")
+    cur.execute(f"INSERT INTO Temperatures (id, timestamp, temperature, process_id) "
+                f"VALUES ({id}, {timestamp}, {temperature}, {process_id})")
     return conn.commit()
 
 
-def get_temperature(process_id):
+def get_temperature(temp_id):
     cur = conn.cursor()
-    cur.execute(f"SELECT *  FROM Temperatures WHERE process_id = {process_id}")
+    cur.execute(f"SELECT *  FROM Temperatures WHERE id = {temp_id}")
     temperature = cur.fetchone()
     return temperature
 
@@ -29,16 +29,17 @@ def get_temperature(process_id):
 '''PROCESS'''
 
 
-def insert_process(fermenter_id, state, stage, timestamp):
+def insert_process(id, fecha_inicio, fecha_fin, stage, state, fermenter_id, carbonator_id, beer_id):
     cur = conn.cursor()
-    cur.execute(f"INSERT INTO Processes (fermenter_id, state, stage, timestamp) "
-                f"VALUES ({fermenter_id}, {state}, {stage}, {timestamp})")
+    cur.execute(f"INSERT INTO Processes (id, fecha_inicio, fecha_fin, stage, state, fermenter_id, "
+                f"carbonator_id, beer_id) VALUES ({id}, {fecha_inicio}, {fecha_fin}, {stage}, {state}, {fermenter_id},"
+                f"{carbonator_id}, {beer_id})")
     return conn.commit()
 
 
 def get_process(process_id):
     cur = conn.cursor()
-    cur.execute(f"SELECT *  FROM Processes WHERE process_id = {process_id}")
+    cur.execute(f"SELECT *  FROM Processes WHERE id = {process_id}")
     process = cur.fetchone()
     return process
 
@@ -46,16 +47,16 @@ def get_process(process_id):
 '''BEER'''
 
 
-def insert_beer(beer_id, description):
+def insert_beer(id, name, maduration_temp, fermentation_temp):
     cur = conn.cursor()
-    cur.execute(f"INSERT INTO Beers (beer_id, description) "
-                f"VALUES ({beer_id}, {description})")
+    cur.execute(f"INSERT INTO Beers (id, name, maduration_temp, fermentation_temp) "
+                f"VALUES ({id}, {name}, {maduration_temp}, {fermentation_temp})")
     return conn.commit()
 
 
 def get_beer(beer_id):
     cur = conn.cursor()
-    cur.execute(f"SELECT *  FROM Beers WHERE beer_id = {beer_id}")
+    cur.execute(f"SELECT *  FROM Beers WHERE id = {beer_id}")
     beer = cur.fetchone()
     return beer
 
@@ -63,16 +64,16 @@ def get_beer(beer_id):
 '''CARBONATOR'''
 
 
-def insert_carbonator(carbonator_id, beer_id):
+def insert_carbonator(id, name):
     cur = conn.cursor()
-    cur.execute(f"INSERT INTO Carbonators (carbonator_id, beer_id) "
-                f"VALUES ({carbonator_id}, {beer_id})")
+    cur.execute(f"INSERT INTO Carbonators (id, name) "
+                f"VALUES ({id}, {name})")
     return conn.commit()
 
 
 def get_carbonator(carbonator_id):
     cur = conn.cursor()
-    cur.execute(f"SELECT *  FROM Carbonators WHERE carbonator_id = {carbonator_id}")
+    cur.execute(f"SELECT *  FROM Carbonators WHERE id = {carbonator_id}")
     carbonator = cur.fetchone()
     return carbonator
 
@@ -80,15 +81,15 @@ def get_carbonator(carbonator_id):
 '''FERMENTER'''
 
 
-def insert_fermenter(fermenter_id, beer_id):
+def insert_fermenter(id, name):
     cur = conn.cursor()
-    cur.execute(f"INSERT INTO Fermenters (fermenter_id, beer_id) "
-                f"VALUES ({fermenter_id}, {beer_id})")
+    cur.execute(f"INSERT INTO Fermenters (id, name) "
+                f"VALUES ({id}, {name})")
     return conn.commit()
 
 
 def get_fermenter(fermenter_id):
     cur = conn.cursor()
-    cur.execute(f"SELECT *  FROM Fermenters WHERE fermenter_id = {fermenter_id}")
+    cur.execute(f"SELECT *  FROM Fermenters WHERE id = {fermenter_id}")
     fermenter = cur.fetchone()
     return fermenter
