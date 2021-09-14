@@ -1,16 +1,16 @@
-CREATE TABLE Carbonator (
+CREATE TABLE Carbonators (
     id int UNIQUE NOT NULL,
     name varchar(30),
 	PRIMARY KEY (id)
 );
 
-CREATE TABLE Fermenter (
+CREATE TABLE Fermenters (
     id int UNIQUE NOT NULL,
     name varchar(30),
 	PRIMARY KEY (id)
 );
 
-CREATE TABLE Beer (
+CREATE TABLE Beers (
     id int UNIQUE NOT NULL,
     name varchar(30),
 	maduration_temp float,
@@ -18,7 +18,7 @@ CREATE TABLE Beer (
 	PRIMARY KEY (id)
 );
 
-CREATE TABLE Process (
+CREATE TABLE Processes (
     id int UNIQUE NOT NULL,
 	fecha_inicio TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	fecha_finalizacion TIMESTAMP,
@@ -28,16 +28,16 @@ CREATE TABLE Process (
 	carbonator_id INT,
 	beer_id INT,
 	PRIMARY KEY (id),
-	FOREIGN KEY (fermenter_id) REFERENCES Fermenter(id),
-	FOREIGN KEY (carbonator_id) REFERENCES Carbonator(id),
-	FOREIGN KEY (beer_id) REFERENCES Beer(id)
+	FOREIGN KEY (fermenter_id) REFERENCES Fermenters(id),
+	FOREIGN KEY (carbonator_id) REFERENCES Carbonators(id),
+	FOREIGN KEY (beer_id) REFERENCES Beers(id)
 );
 
-CREATE TABLE Temperature (
+CREATE TABLE Temperatures (
     id int UNIQUE NOT NULL,
 	timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	temperature float,
 	process_id INT,
 	PRIMARY KEY (id),
-	FOREIGN KEY (process_id) REFERENCES Process(id)
+	FOREIGN KEY (process_id) REFERENCES Processes(id)
 );
