@@ -19,10 +19,10 @@ def insert_temperature():
     """
     try:
         if request.method == 'POST':
-            id = request.form['id']
-            temperature = request.form['temperature']
+            id = request.json['id']
+            temperature = request.json['temperature']
             timestamp = time.time()
-            process_id = request.form['process_id']
+            process_id = request.json['process_id']
             return str(db.insert_temperature(id, temperature, timestamp, process_id))
     except Exception as e:
         return e.__cause__
@@ -37,7 +37,7 @@ def get_temperature():
     """
     try:
         if request.method == 'GET':
-            process_id = request.form['process_id']
+            process_id = request.json['process_id']
             return db.get_temperature(process_id)
     except Exception as e:
         return e.__cause__
@@ -56,14 +56,14 @@ def insert_process():
    """
     try:
         if request.method == 'POST':
-            id = request.form['id']
+            id = request.json['id']
             fecha_inicio = time.time()
             fecha_fin = pymysql.NULL
-            state = request.form['state']  # Esto se deberia setear aca?
-            stage = request.form['stage']  # Esto se deberia setear aca?
-            fermenter_id = request.form['fermenter_id']
-            carbonator_id = request.form['carbonator_id']
-            beer_id = request.form['beer_id']
+            state = request.json['state']  # Esto se deberia setear aca?
+            stage = request.json['stage']  # Esto se deberia setear aca?
+            fermenter_id = request.json['fermenter_id']
+            carbonator_id = request.json['carbonator_id']
+            beer_id = request.json['beer_id']
             return str(db.insert_process(id, fecha_inicio, fecha_fin, stage,
                                          state, fermenter_id, carbonator_id, beer_id))
     except Exception as e:
@@ -79,7 +79,7 @@ def get_process():
     """
     try:
         if request.method == 'GET':
-            process_id = request.form["id"]
+            process_id = request.json["id"]
             return db.get_process(process_id)
     except Exception as e:
         return e.__cause__
@@ -98,8 +98,8 @@ def insert_carbonator():
    """
     try:
         if request.method == 'POST':
-            id = request.form['id']
-            name = request.form['name']
+            id = request.json['id']
+            name = request.json['name']
             return str(db.insert_carbonator(id, name))
     except Exception as e:
         return e.__cause__
@@ -114,7 +114,7 @@ def get_carbonator():
     """
     try:
         if request.method == 'GET':
-            carbonator_id = request.form["id"]
+            carbonator_id = request.json["id"]
             return db.get_carbonator(carbonator_id)
     except Exception as e:
         return e.__cause__
@@ -133,8 +133,8 @@ def insert_fermenter():
   """
     try:
         if request.method == 'POST':
-            id = request.form['id']
-            name = request.form['name']
+            id = request.json['id']
+            name = request.json['name']
             return str(db.insert_fermenter(id, name))
     except Exception as e:
         return e.__cause__
@@ -149,7 +149,7 @@ def get_fermenter():
     """
     try:
         if request.method == 'GET':
-            fermenter_id = request.form["id"]
+            fermenter_id = request.json["id"]
             return db.get_fermenter(fermenter_id)
     except Exception as e:
         return e.__cause__
@@ -168,10 +168,10 @@ def insert_beer():
   """
     try:
         if request.method == 'POST':
-            id = request.form['id']
-            name = request.form['name']
-            maduration_temp = request.form['maduration_temp']
-            fermentation_temp = request.form['fermentation_temp']
+            id = request.json['id']
+            name = request.json['name']
+            maduration_temp = request.json['maduration_temp']
+            fermentation_temp = request.json['fermentation_temp']
             return str(db.insert_beer(id, name, maduration_temp, fermentation_temp))
     except Exception as e:
         return e.__cause__
@@ -186,7 +186,7 @@ def get_beer():
    """
     try:
         if request.method == 'GET':
-            beer_id = request.form["id"]
+            beer_id = request.json["id"]
             return db.get_beer(beer_id)
     except Exception as e:
         return e.__cause__
