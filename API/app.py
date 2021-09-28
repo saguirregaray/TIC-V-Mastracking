@@ -1,6 +1,7 @@
 import time
 
 import pymysql
+from flask import jsonify
 from flask import Flask, request
 from API import rds_db as db
 
@@ -15,7 +16,7 @@ def insert_process():
        This method receives the id, state, stage, fermenter_id, beer_id and carbonator_id from the frontend,
        creates a new process record and inserts it into the RDS database on AWS.
 
-       :return: The status code of the insertion
+       :return: The process record
    """
     try:
         if request.method == 'POST':
@@ -29,7 +30,7 @@ def insert_process():
             beer_id = request.json['beer_id']
             db.insert_process(id, fecha_inicio, fecha_fin, stage,
                               state, fermenter_id, carbonator_id, beer_id)
-            return str(db.get_process(id))
+            return jsonify(result=db.get_process(id))
     except Exception as e:
         return e.__cause__
 
@@ -58,14 +59,14 @@ def insert_carbonator():
        This method receives the id and name from the frontend,
        creates a new carbonator record and inserts it into the RDS database on AWS.
 
-       :return: The status code of the insertion
+       :return: The carbonator record
    """
     try:
         if request.method == 'POST':
             id = request.json['id']
             name = request.json['name']
             db.insert_carbonator(id, name)
-            return str(db.get_carbonator(id))
+            return jsonify(result=db.get_carbonator(id))
     except Exception as e:
         return e.__cause__
 
@@ -94,14 +95,14 @@ def insert_fermenter():
       This method receives the id and name from the frontend,
       creates a new fermenter record and inserts it into the RDS database on AWS.
 
-      :return: The status code of the insertion
+      :return: The fermenter record
   """
     try:
         if request.method == 'POST':
             id = request.json['id']
             name = request.json['name']
             db.insert_fermenter(id, name)
-            return str(db.get_fermenter(id))
+            return jsonify(result=db.get_fermenter(id))
     except Exception as e:
         return e.__cause__
 
@@ -130,7 +131,7 @@ def insert_beer():
       This method receives the id, name, maduration temperature and fermentation temperature from the frontend,
       creates a new beer record and inserts it into the RDS database on AWS.
 
-      :return: The status code of the insertion
+      :return: The beer record.
   """
     try:
         if request.method == 'POST':
@@ -139,7 +140,7 @@ def insert_beer():
             maduration_temp = request.json['maduration_temp']
             fermentation_temp = request.json['fermentation_temp']
             db.insert_beer(id, name, maduration_temp, fermentation_temp)
-            return str(db.get_beer(id))
+            return jsonify(result=db.get_beer(id))
     except Exception as e:
         return e.__cause__
 
@@ -155,6 +156,35 @@ def get_beer():
         if request.method == 'GET':
             beer_id = request.json["id"]
             return db.get_beer(beer_id)
+    except Exception as e:
+        return e.__cause__
+
+
+@app.route('/beers', methods=['get'])
+def get_beers():
+    """
+       This method returns a list with all the beers.
+
+       :return: The list of beer records
+   """
+    try:
+        if request.method == 'GET':
+            return jsonify(result=db.get_beers())
+    except Exception as e:
+        return e.__cause__
+
+
+@app.route('/beer', methods=['delete'])
+def delete_beer():
+    """
+       This method deletes a beer given an id.
+
+       :return: None
+   """
+    try:
+        if request.method == 'DELETE':
+            beer_id = request.json["id"]
+            return jsonify(result=db.delete_beer(beer_id))
     except Exception as e:
         return e.__cause__
 

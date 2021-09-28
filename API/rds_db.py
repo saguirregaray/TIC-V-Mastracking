@@ -28,6 +28,13 @@ def get_process(process_id):
     return process
 
 
+def get_processes():
+    cur = conn.cursor()
+    cur.execute(f"SELECT *  FROM Processes")
+    processes = cur.fetchall()
+    return processes
+
+
 '''BEER'''
 
 
@@ -42,6 +49,20 @@ def get_beer(beer_id):
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Beers WHERE id = {beer_id}")
     beer = cur.fetchone()
+    return beer
+
+
+def delete_beer(beer_id):
+    cur = conn.cursor()
+    cur.execute(f"DELETE FROM Beers WHERE id = {beer_id}")
+    beer = cur.fetchone()
+    return beer
+
+
+def get_beers():
+    cur = conn.cursor()
+    cur.execute(f"SELECT * FROM Beers")
+    beer = cur.fetchall()
     return beer
 
 
