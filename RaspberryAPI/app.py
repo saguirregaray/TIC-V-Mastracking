@@ -1,6 +1,6 @@
 import time
 
-import pymysql
+from flask import jsonify
 from flask import Flask, request
 from RaspberryAPI import rds_db as db
 
@@ -19,12 +19,10 @@ def insert_temperature():
     """
     try:
         if request.method == 'POST':
-            id = request.json['id']
             temperature = request.json['temperature']
             timestamp = time.time()
             process_id = request.json['process_id']
-            db.insert_temperature(id, temperature, timestamp, process_id)
-            return str(db.get_temperature(id))
+            return jsonify(result=db.insert_temperature(temperature, timestamp, process_id))
     except Exception as e:
         return e.__cause__
 
@@ -38,7 +36,7 @@ def get_temperature():
     """
     try:
         if request.method == 'GET':
-            process_id = request.json['process_id']
+            process_id = request.json['id']
             return db.get_temperature(process_id)
     except Exception as e:
         return e.__cause__

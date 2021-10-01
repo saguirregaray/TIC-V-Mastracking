@@ -20,7 +20,6 @@ def insert_process():
    """
     try:
         if request.method == 'POST':
-            id = request.json['id']
             fecha_inicio = time.time()
             fecha_fin = pymysql.NULL
             state = request.json['state']  # Esto se deberia setear aca?
@@ -28,9 +27,8 @@ def insert_process():
             fermenter_id = request.json['fermenter_id']
             carbonator_id = request.json['carbonator_id']
             beer_id = request.json['beer_id']
-            db.insert_process(id, fecha_inicio, fecha_fin, stage,
-                              state, fermenter_id, carbonator_id, beer_id)
-            return jsonify(result=db.get_process(id))
+            return jsonify(result=db.insert_process(fecha_inicio, fecha_fin, stage,
+                                                    state, fermenter_id, carbonator_id, beer_id))
     except Exception as e:
         return e.__cause__
 
@@ -63,10 +61,8 @@ def insert_carbonator():
    """
     try:
         if request.method == 'POST':
-            id = request.json['id']
             name = request.json['name']
-            db.insert_carbonator(id, name)
-            return jsonify(result=db.get_carbonator(id))
+            return jsonify(result=db.insert_carbonator(name))
     except Exception as e:
         return e.__cause__
 
@@ -99,10 +95,8 @@ def insert_fermenter():
   """
     try:
         if request.method == 'POST':
-            id = request.json['id']
             name = request.json['name']
-            db.insert_fermenter(id, name)
-            return jsonify(result=db.get_fermenter(id))
+            return jsonify(result=db.insert_fermenter(name))
     except Exception as e:
         return e.__cause__
 
@@ -135,12 +129,10 @@ def insert_beer():
   """
     try:
         if request.method == 'POST':
-            id = request.json['id']
             name = request.json['name']
             maduration_temp = request.json['maduration_temp']
             fermentation_temp = request.json['fermentation_temp']
-            db.insert_beer(id, name, maduration_temp, fermentation_temp)
-            return jsonify(result=db.get_beer(id))
+            return jsonify(result=db.insert_beer(name, maduration_temp, fermentation_temp))
     except Exception as e:
         return e.__cause__
 
