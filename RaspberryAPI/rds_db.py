@@ -13,11 +13,12 @@ conn = pymysql.connect(
 '''TEMPERATURE'''
 
 
-def insert_temperature(id, temperature, timestamp, process_id):
+def insert_temperature(temperature, timestamp, process_id):
     cur = conn.cursor()
-    cur.execute(f"INSERT INTO Temperatures (id, timestamp, temperature, process_id) "
-                f"VALUES ({id}, {timestamp}, {temperature}, {process_id})")
-    return conn.commit()
+    cur.execute(f"INSERT INTO Temperatures (timestamp, temperature, process_id) "
+                f"VALUES ({timestamp}, {temperature}, {process_id})")
+    conn.commit()
+    return get_temperature(cur.lastrowid)
 
 
 def get_temperature(temp_id):

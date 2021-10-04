@@ -13,12 +13,13 @@ conn = pymysql.connect(
 '''PROCESS'''
 
 
-def insert_process(id, fecha_inicio, fecha_fin, stage, state, fermenter_id, carbonator_id, beer_id):
+def insert_process(fecha_inicio, fecha_fin, stage, state, fermenter_id, carbonator_id, beer_id):
     cur = conn.cursor()
-    cur.execute(f"INSERT INTO Processes (id, fecha_inicio, fecha_finalizacion, stage, state, fermenter_id, "
-                f"carbonator_id, beer_id) VALUES ({id}, {fecha_inicio}, {fecha_fin}, '{stage}', '{state}'"
+    cur.execute(f"INSERT INTO Processes (fecha_inicio, fecha_finalizacion, stage, state, fermenter_id, "
+                f"carbonator_id, beer_id) VALUES ({fecha_inicio}, {fecha_fin}, '{stage}', '{state}'"
                 f", {fermenter_id}, {carbonator_id}, {beer_id})")
-    return conn.commit()
+    conn.commit()
+    return get_process(cur.lastrowid)
 
 
 def get_process(process_id):
@@ -38,11 +39,12 @@ def get_processes():
 '''BEER'''
 
 
-def insert_beer(id, name, maduration_temp, fermentation_temp):
+def insert_beer(name, maduration_temp, fermentation_temp):
     cur = conn.cursor()
-    cur.execute(f"INSERT INTO Beers (id, name, maduration_temp, fermentation_temp) "
-                f"VALUES ({id}, '{name}', {maduration_temp}, {fermentation_temp})")
-    return conn.commit()
+    cur.execute(f"INSERT INTO Beers (name, maduration_temp, fermentation_temp) "
+                f"VALUES ('{name}', {maduration_temp}, {fermentation_temp})")
+    conn.commit()
+    return get_beer(cur.lastrowid)
 
 
 def get_beer(beer_id):
@@ -69,11 +71,12 @@ def get_beers():
 '''CARBONATOR'''
 
 
-def insert_carbonator(id, name):
+def insert_carbonator(name):
     cur = conn.cursor()
-    cur.execute(f"INSERT INTO Carbonators (id, name) "
-                f"VALUES ({id}, '{name}')")
-    return conn.commit()
+    cur.execute(f"INSERT INTO Carbonators (name) "
+                f"VALUES ('{name}')")
+    conn.commit()
+    return get_carbonator(cur.lastrowid)
 
 
 def get_carbonator(carbonator_id):
@@ -86,11 +89,12 @@ def get_carbonator(carbonator_id):
 '''FERMENTER'''
 
 
-def insert_fermenter(id, name):
+def insert_fermenter(name):
     cur = conn.cursor()
-    cur.execute(f"INSERT INTO Fermenters (id, name) "
-                f"VALUES ({id}, '{name}')")
-    return conn.commit()
+    cur.execute(f"INSERT INTO Fermenters (name) "
+                f"VALUES ('{name}')")
+    conn.commit()
+    return get_fermenter(cur.lastrowid)
 
 
 def get_fermenter(fermenter_id):
