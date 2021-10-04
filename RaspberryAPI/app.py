@@ -3,12 +3,16 @@ import time
 from flask import jsonify
 from flask import Flask, request
 from RaspberryAPI import rds_db as db
+from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 '''TEMPERATURE'''
 
 
+@cross_origin()
 @app.route('/temperature', methods=['post'])
 def insert_temperature():
     """
@@ -27,6 +31,7 @@ def insert_temperature():
         return e.__cause__
 
 
+@cross_origin()
 @app.route('/temperature', methods=['get'])
 def get_temperature():
     """
