@@ -4,12 +4,16 @@ import pymysql
 from flask import jsonify
 from flask import Flask, request
 from API import rds_db as db
+from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 '''PROCESS'''
 
 
+@cross_origin()
 @app.route('/process', methods=['post'])
 def insert_process():
     """
@@ -33,6 +37,7 @@ def insert_process():
         return e.__cause__
 
 
+@cross_origin()
 @app.route('/process', methods=['get'])
 def get_process():
     """
@@ -51,6 +56,7 @@ def get_process():
 '''CARBONATOR'''
 
 
+@cross_origin()
 @app.route('/carbonator', methods=['post'])
 def insert_carbonator():
     """
@@ -67,6 +73,7 @@ def insert_carbonator():
         return e.__cause__
 
 
+@cross_origin()
 @app.route('/carbonator', methods=['get'])
 def get_carbonator():
     """
@@ -85,6 +92,7 @@ def get_carbonator():
 '''FERMENTER'''
 
 
+@cross_origin()
 @app.route('/fermenter', methods=['post'])
 def insert_fermenter():
     """
@@ -101,6 +109,7 @@ def insert_fermenter():
         return e.__cause__
 
 
+@cross_origin()
 @app.route('/fermenter', methods=['get'])
 def get_fermenter():
     """
@@ -119,6 +128,7 @@ def get_fermenter():
 '''BEER'''
 
 
+@cross_origin()
 @app.route('/beer', methods=['post'])
 def insert_beer():
     """
@@ -137,6 +147,7 @@ def insert_beer():
         return e.__cause__
 
 
+@cross_origin()
 @app.route('/beer', methods=['get'])
 def get_beer():
     """
@@ -152,6 +163,7 @@ def get_beer():
         return e.__cause__
 
 
+@cross_origin()
 @app.route('/beers', methods=['get'])
 def get_beers():
     """
@@ -166,6 +178,7 @@ def get_beers():
         return e.__cause__
 
 
+@cross_origin()
 @app.route('/beer', methods=['delete'])
 def delete_beer():
     """
