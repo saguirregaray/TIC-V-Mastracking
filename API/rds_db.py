@@ -86,6 +86,23 @@ def get_carbonator(carbonator_id):
     return carbonator
 
 
+def get_carbonators():
+    cur = conn.cursor()
+    cur.execute(f"SELECT * FROM Carbonators")
+    carbonators = cur.fetchall()
+    return carbonators
+
+
+def get_free_carbonators():
+    cur = conn.cursor()
+    cur.execute(f"SELECT Carbonators.id, Carbonators.name FROM Carbonators "
+                f"LEFT JOIN Processes "
+                f"ON Carbonators.id = Processes.carbonator_id "
+                f"WHERE Processes.carbonator_id IS NULL")
+    carbonators = cur.fetchall()
+    return carbonators
+
+
 '''FERMENTER'''
 
 
@@ -102,3 +119,38 @@ def get_fermenter(fermenter_id):
     cur.execute(f"SELECT *  FROM Fermenters WHERE id = {fermenter_id}")
     fermenter = cur.fetchone()
     return fermenter
+
+
+def get_fermenters():
+    cur = conn.cursor()
+    cur.execute(f"SELECT * FROM Fermenters")
+    fermenters = cur.fetchall()
+    return fermenters
+
+
+def get_free_fermenters():
+    cur = conn.cursor()
+    cur.execute(f"SELECT Fermenters.id, Fermenters.name FROM Fermenters "
+                f"LEFT JOIN Processes "
+                f"ON Fermenters.id = Processes.fermenter_id "
+                f"WHERE Processes.fermenter_id IS NULL")
+    fermenters = cur.fetchall()
+    return fermenters
+
+
+'''TEMPERATURE'''
+
+
+def insert_temperature(temperature, timestamp, process_id):
+    cur = conn.cursor()
+    cur.execute(f"INSERT INTO Temperatures (timestamp, temperature, process_id) "
+                f"VALUES ({timestamp}, {temperature}, {process_id})")
+    conn.commit()
+    return get_temperature(cur.lastrowid)
+
+
+def get_temperature(temp_id):
+    cur = conn.cursor()
+    cur.execute(f"SELECT *  FROM Temperatures WHERE id = {temp_id}")
+    temperature = cur.fetchone()
+    return temperature

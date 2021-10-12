@@ -89,6 +89,36 @@ def get_carbonator():
         return e.__cause__
 
 
+@cross_origin()
+@app.route('/carbonators', methods=['get'])
+def get_carbonators():
+    """
+        This method gets all the carbonator records.
+
+        :return: The carbonator records
+    """
+    try:
+        if request.method == 'GET':
+            return jsonify(result=db.get_carbonators())
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/free_carbonators', methods=['get'])
+def get_carbonators():
+    """
+        This method gets the free carbonator records.
+
+        :return: The carbonator records
+    """
+    try:
+        if request.method == 'GET':
+            return jsonify(result=db.get_free_carbonators())
+    except Exception as e:
+        return e.__cause__
+
+
 '''FERMENTER'''
 
 
@@ -113,14 +143,43 @@ def insert_fermenter():
 @app.route('/fermenter', methods=['get'])
 def get_fermenter():
     """
-        This method gets a fermenter record from a given fermenter id.
+        This method gets all the free fermenter records.
 
-        :return: The fermenter record
+        :return: The fermenter records
     """
     try:
         if request.method == 'GET':
-            fermenter_id = request.json["id"]
-            return db.get_fermenter(fermenter_id)
+            return db.get_fermenters()
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/fermenters', methods=['get'])
+def get_fermenters():
+    """
+        This method gets all the fermenters records.
+
+        :return: The carbonator records
+    """
+    try:
+        if request.method == 'GET':
+            return jsonify(result=db.get_fermenters())
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/free_fermenters', methods=['get'])
+def get_free_fermenters():
+    """
+        This method gets the free fermenter records.
+
+        :return: The carbonator records
+    """
+    try:
+        if request.method == 'GET':
+            return jsonify(result=db.get_free_fermenters())
     except Exception as e:
         return e.__cause__
 
@@ -190,6 +249,44 @@ def delete_beer():
         if request.method == 'DELETE':
             beer_id = request.json["id"]
             return jsonify(result=db.delete_beer(beer_id))
+    except Exception as e:
+        return e.__cause__
+
+
+'''TEMPERATURE'''
+
+
+@cross_origin()
+@app.route('/temperature', methods=['post'])
+def insert_temperature():
+    """
+        This method receives the id, temperature and process_id from the frontend,
+        creates a new temperature record and inserts it into the RDS database on AWS.
+
+        :return: The status code of the insertion
+    """
+    try:
+        if request.method == 'POST':
+            temperature = request.json['temperature']
+            timestamp = time.time()
+            process_id = request.json['process_id']
+            return jsonify(result=db.insert_temperature(temperature, timestamp, process_id))
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/temperature', methods=['get'])
+def get_temperature():
+    """
+        This method gets a temperature record from a given process_id.
+
+        :return: The temperature record
+    """
+    try:
+        if request.method == 'GET':
+            process_id = request.json['id']
+            return db.get_temperature(process_id)
     except Exception as e:
         return e.__cause__
 
