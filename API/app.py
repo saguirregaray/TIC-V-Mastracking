@@ -85,13 +85,27 @@ def get_carbonator():
 @app.route('/carbonators', methods=['get'])
 def get_carbonators():
     """
-        This method gets the free carbonator records.
+        This method gets all the carbonator records.
 
         :return: The carbonator records
     """
     try:
         if request.method == 'GET':
             return jsonify(result=db.get_carbonators())
+    except Exception as e:
+        return e.__cause__
+
+
+@app.route('/free_carbonators', methods=['get'])
+def get_carbonators():
+    """
+        This method gets the free carbonator records.
+
+        :return: The carbonator records
+    """
+    try:
+        if request.method == 'GET':
+            return jsonify(result=db.get_free_carbonators())
     except Exception as e:
         return e.__cause__
 
@@ -132,13 +146,27 @@ def get_fermenter():
 @app.route('/fermenters', methods=['get'])
 def get_fermenters():
     """
-        This method gets the free carbonator records.
+        This method gets all the fermenters records.
 
         :return: The carbonator records
     """
     try:
         if request.method == 'GET':
             return jsonify(result=db.get_fermenters())
+    except Exception as e:
+        return e.__cause__
+
+
+@app.route('/free_fermenters', methods=['get'])
+def get_free_fermenters():
+    """
+        This method gets the free fermenter records.
+
+        :return: The carbonator records
+    """
+    try:
+        if request.method == 'GET':
+            return jsonify(result=db.get_free_fermenters())
     except Exception as e:
         return e.__cause__
 
