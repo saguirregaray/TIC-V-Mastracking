@@ -106,7 +106,7 @@ def get_carbonators():
 
 @cross_origin()
 @app.route('/free_carbonators', methods=['get'])
-def get_carbonators():
+def get_free_carbonators():
     """
         This method gets the free carbonator records.
 
