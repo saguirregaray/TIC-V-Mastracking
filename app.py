@@ -1,14 +1,54 @@
 import time
 
 import pymysql
-from flask import jsonify
-from flask import Flask, request
-from API import rds_db as db
+from celery import Celery
+from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
+from flask_mail import Mail, Message
+
+import rds_db as db
+from resources.config import celeryconfig
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = '1234567'
+
+# CORS configuration
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
+
+# Flask-Mail configuration
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = 'mastraking.uy@gmail.com'
+app.config['MAIL_PASSWORD'] = 'mastracking_uy'
+
+# Celery configuration
+app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
+app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+
+# Initialize extensions
+mail = Mail(app)
+
+# Initialize Celery
+celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+celery.conf.update(app.config)
+celery.config_from_object(celeryconfig)
+
+'''EMAIL'''
+
+
+@celery.task(name='tasks.email')
+def send_async_email():
+    """Background task to send an email with Flask-Mail."""
+    msg = Message(subject='Uruguay noma - mastracking',
+                  sender='mastraking.uy@gmail.com',
+                  recipients=['seraguirregaray@gmail.com'])  # Aca va Wilfredo o quien corresponda
+    msg.body = 'Habemus mail, Serrana sos Dios.'
+    with app.app_context():
+        mail.send(msg)
+
 
 '''PROCESS'''
 
@@ -106,7 +146,7 @@ def get_carbonators():
 
 @cross_origin()
 @app.route('/free_carbonators', methods=['get'])
-def get_carbonators():
+def get_free_carbonators():
     """
         This method gets the free carbonator records.
 
