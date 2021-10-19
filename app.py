@@ -331,5 +331,55 @@ def get_temperature():
         return e.__cause__
 
 
+'''ALERTS'''
+
+
+@cross_origin()
+@app.route('/alert', methods=['post'])
+def insert_alert():
+    """
+      This method receives a description of the alert and creates a new instance with the corresponding timestamp.
+
+      :return: The alert record
+  """
+    try:
+        if request.method == 'POST':
+            description = request.json['description']
+            return jsonify(result=db.insert_alert(description))
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/alert', methods=['get'])
+def get_alert():
+    """
+        This method gets an alert given an id.
+
+        :return: The alert record.
+    """
+    try:
+        if request.method == 'GET':
+            id = request.json['id']
+            return db.get_alert(id)
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/alerts', methods=['get'])
+def get_alerts():
+    """
+        This method gets all the alert records.
+
+        :return: The alert records
+    """
+    try:
+        if request.method == 'GET':
+            return jsonify(result=db.get_alerts())
+    except Exception as e:
+        return e.__cause__
+
+
 if __name__ == "__main__":
     app.run(debug=True)
