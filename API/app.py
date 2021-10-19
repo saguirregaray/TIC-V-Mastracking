@@ -105,6 +105,22 @@ def get_carbonators():
 
 
 @cross_origin()
+@app.route('/carbonator', methods=['delete'])
+def delete_carbonator():
+    """
+       This method deletes a carbonator given an id.
+
+       :return: None
+   """
+    try:
+        if request.method == 'DELETE':
+            carbonator_id = request.json["id"]
+            return jsonify(result=db.delete_carbonator(carbonator_id))
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
 @app.route('/free_carbonators', methods=['get'])
 def get_free_carbonators():
     """
@@ -165,6 +181,22 @@ def get_fermenters():
     try:
         if request.method == 'GET':
             return jsonify(result=db.get_fermenters())
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/fermenter', methods=['delete'])
+def delete_fermenter():
+    """
+       This method deletes a fermenter given an id.
+
+       :return: None
+   """
+    try:
+        if request.method == 'DELETE':
+            fermenter_id = request.json["id"]
+            return jsonify(result=db.delete_fermenter(fermenter_id))
     except Exception as e:
         return e.__cause__
 

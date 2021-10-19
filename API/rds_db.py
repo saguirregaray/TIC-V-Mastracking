@@ -93,6 +93,13 @@ def get_carbonators():
     return carbonators
 
 
+def delete_carbonator(carbonator_id):
+    cur = conn.cursor()
+    cur.execute(f"DELETE FROM Carbonators WHERE id = {carbonator_id}")
+    carbonator = cur.fetchone()
+    return carbonator
+
+
 def get_free_carbonators():
     cur = conn.cursor()
     cur.execute(f"SELECT Carbonators.id, Carbonators.name FROM Carbonators "
@@ -126,6 +133,13 @@ def get_fermenters():
     cur.execute(f"SELECT * FROM Fermenters")
     fermenters = cur.fetchall()
     return fermenters
+
+
+def delete_fermenter(fermenter_id):
+    cur = conn.cursor()
+    cur.execute(f"DELETE FROM Fermenters WHERE id = {fermenter_id}")
+    fermenter = cur.fetchone()
+    return fermenter
 
 
 def get_free_fermenters():
