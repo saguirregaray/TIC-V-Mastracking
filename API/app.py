@@ -26,13 +26,12 @@ def insert_process():
         if request.method == 'POST':
             fecha_inicio = time.time()
             fecha_fin = pymysql.NULL
-            state = request.json['state']  # Esto se deberia setear aca?
-            stage = request.json['stage']  # Esto se deberia setear aca?
+            state = 1 
+            stage = 'fermentation'
             fermenter_id = request.json['fermenter_id']
-            carbonator_id = request.json['carbonator_id']
             beer_id = request.json['beer_id']
             return jsonify(result=db.insert_process(fecha_inicio, fecha_fin, stage,
-                                                    state, fermenter_id, carbonator_id, beer_id))
+                                                    state, fermenter_id, beer_id))
     except Exception as e:
         return e.__cause__
 

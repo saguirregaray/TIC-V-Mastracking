@@ -13,11 +13,11 @@ conn = pymysql.connect(
 '''PROCESS'''
 
 
-def insert_process(fecha_inicio, fecha_fin, stage, state, fermenter_id, carbonator_id, beer_id):
+def insert_process(fecha_inicio, fecha_fin, stage, state, fermenter_id, beer_id):
     cur = conn.cursor()
     cur.execute(f"INSERT INTO Processes (fecha_inicio, fecha_finalizacion, stage, state, fermenter_id, "
-                f"carbonator_id, beer_id) VALUES ({fecha_inicio}, {fecha_fin}, '{stage}', '{state}'"
-                f", {fermenter_id}, {carbonator_id}, {beer_id})")
+                f"beer_id) VALUES ({fecha_inicio}, {fecha_fin}, '{stage}', '{state}'"
+                f", {fermenter_id}, {beer_id})")
     conn.commit()
     return get_process(cur.lastrowid)
 
