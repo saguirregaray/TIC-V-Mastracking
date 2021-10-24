@@ -49,7 +49,7 @@ def insert_beer(name, maduration_temp, fermentation_temp):
 
 def get_beer(beer_id):
     cur = conn.cursor()
-    cur.execute(f"SELECT *  FROM Beers WHERE id = {beer_id} AND deleted = 0")
+    cur.execute(f"SELECT *  FROM Beers WHERE id = {beer_id} AND deleted = false")
     beer = cur.fetchone()
     return beer
 
