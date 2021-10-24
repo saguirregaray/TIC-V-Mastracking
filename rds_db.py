@@ -168,3 +168,28 @@ def get_temperature(temp_id):
     cur.execute(f"SELECT *  FROM Temperatures WHERE id = {temp_id}")
     temperature = cur.fetchone()
     return temperature
+
+
+'''ALERTS'''
+
+
+def insert_alert(description):
+    cur = conn.cursor()
+    cur.execute(f"INSERT INTO Alerts (description) "
+                f"VALUES ('{description}')")
+    conn.commit()
+    return get_alert(cur.lastrowid)
+
+
+def get_alert(id):
+    cur = conn.cursor()
+    cur.execute(f"SELECT *  FROM Alerts WHERE id = {id}")
+    alert = cur.fetchone()
+    return alert
+
+
+def get_alerts():
+    cur = conn.cursor()
+    cur.execute(f"SELECT * FROM Alerts")
+    alerts = cur.fetchall()
+    return alerts

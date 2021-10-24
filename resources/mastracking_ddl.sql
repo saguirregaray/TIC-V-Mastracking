@@ -1,17 +1,17 @@
 CREATE TABLE Carbonators (
-    id int UNIQUE NOT NULL,
+    id int UNIQUE NOT NULL AUTO_INCREMENT,
     name varchar(30),
 	PRIMARY KEY (id)
 );
 
 CREATE TABLE Fermenters (
-    id int UNIQUE NOT NULL,
+    id int UNIQUE NOT NULL AUTO_INCREMENT,
     name varchar(30),
 	PRIMARY KEY (id)
 );
 
 CREATE TABLE Beers (
-    id int UNIQUE NOT NULL,
+    id int UNIQUE NOT NULL AUTO_INCREMENT,
     name varchar(30),
 	maduration_temp float,
 	fermentation_temp float,
@@ -19,7 +19,7 @@ CREATE TABLE Beers (
 );
 
 CREATE TABLE Processes (
-    id int UNIQUE NOT NULL,
+    id int UNIQUE NOT NULL AUTO_INCREMENT,
 	fecha_inicio TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	fecha_finalizacion TIMESTAMP,
 	stage varchar(20),
@@ -34,10 +34,17 @@ CREATE TABLE Processes (
 );
 
 CREATE TABLE Temperatures (
-    id int UNIQUE NOT NULL,
+    id int UNIQUE NOT NULL AUTO_INCREMENT,
 	timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	temperature float,
 	process_id INT,
 	PRIMARY KEY (id),
 	FOREIGN KEY (process_id) REFERENCES Processes(id)
+);
+
+CREATE TABLE Alerts (
+    id int UNIQUE NOT NULL AUTO_INCREMENT,
+    description varchar(500),
+    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (id)
 );
