@@ -42,10 +42,10 @@ celery.config_from_object(celeryconfig)
 @celery.task(name='tasks.email')
 def send_async_email():
     """Background task to send an email with Flask-Mail."""
-    msg = Message(subject='Uruguay noma - mastracking',
+    msg = Message(subject='MasTracking',
                   sender='mastraking.uy@gmail.com',
-                  recipients=['seraguirregaray@gmail.com'])  # Aca va Wilfredo o quien corresponda
-    msg.body = 'Habemus mail, Serrana sos Dios.'
+                  recipients=['seraguirregaray@gmail.com'])
+    msg.body = 'Mastracking alert service: There was an error'
     with app.app_context():
         mail.send(msg)
 
