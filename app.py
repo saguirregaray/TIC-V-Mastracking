@@ -5,6 +5,7 @@ from celery import Celery
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from flask_mail import Mail, Message
+from datetime import datetime
 
 import rds_db as db
 from resources.config import celeryconfig
@@ -28,6 +29,9 @@ app.config['MAIL_PASSWORD'] = 'mastracking_uy'
 app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
 app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 
+# Alarm configuration
+app.config['THRESHOLD'] = 3
+
 # Initialize extensions
 mail = Mail(app)
 
@@ -39,7 +43,14 @@ celery.config_from_object(celeryconfig)
 '''EMAIL'''
 
 
-@celery.task(name='tasks.email')
+@celery.task(name='tasks.alarm')
+def alert():
+    active_processes = db.get_active_processes()
+    for process in active_processes:
+        if set_alarm(process):
+            send_async_email()
+
+
 def send_async_email():
     """Background task to send an email with Flask-Mail."""
     msg = Message(subject='MasTracking',
@@ -48,6 +59,23 @@ def send_async_email():
     msg.body = 'Mastracking alert service: There was an error'
     with app.app_context():
         mail.send(msg)
+
+
+def set_alarm(process):
+    temp = process['current_temperature']
+    stage = process['stage']
+    beer_id = process['beer_id']
+    if stage == "fermentation":
+        expected_temp = db.get_beer(beer_id)['fermentation_temp']
+    elif stage == "carbonation":
+        expected_temp = db.get_beer(beer_id)['carbonation_temp']
+    else:
+        expected_temp = db.get_beer(beer_id)['maduration_temp']
+
+    if temp is None or abs(temp - expected_temp) >= app.config['THRESHOLD']:
+        return True
+    else:
+        return False
 
 
 '''PROCESS'''
@@ -64,7 +92,8 @@ def insert_process():
    """
     try:
         if request.method == 'POST':
-            fecha_inicio = time.time()
+            ts = time.time()
+            fecha_inicio = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
             fecha_fin = pymysql.NULL
             state = 1 
             stage = 'fermentation'
@@ -87,7 +116,21 @@ def get_process():
     try:
         if request.method == 'GET':
             process_id = request.json["id"]
-            return db.get_process(process_id)
+            return jsonify(db.get_process(process_id))
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/process/active', methods=['get'])
+def get_active_processes():
+    """
+        This method gets all active processes.
+        :return: The process records
+    """
+    try:
+        if request.method == 'GET':
+            return jsonify(db.get_active_processes())
     except Exception as e:
         return e.__cause__
 
@@ -338,8 +381,9 @@ def insert_temperature():
     """
     try:
         if request.method == 'POST':
+            ts = time.time()
+            timestamp = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
             temperature = request.json['temperature']
-            timestamp = time.time()
             process_id = request.json['process_id']
             return jsonify(result=db.insert_temperature(temperature, timestamp, process_id))
     except Exception as e:

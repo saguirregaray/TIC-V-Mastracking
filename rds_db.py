@@ -16,7 +16,7 @@ conn = pymysql.connect(
 def insert_process(fecha_inicio, fecha_fin, stage, state, fermenter_id, beer_id):
     cur = conn.cursor()
     cur.execute(f"INSERT INTO Processes (fecha_inicio, fecha_finalizacion, stage, state, fermenter_id, "
-                f"beer_id) VALUES ({fecha_inicio}, {fecha_fin}, '{stage}', '{state}'"
+                f"beer_id) VALUES ('{fecha_inicio}', '{fecha_fin}', '{stage}', '{state}'"
                 f", {fermenter_id}, {beer_id})")
     conn.commit()
     return get_process(cur.lastrowid)
@@ -32,6 +32,28 @@ def get_process(process_id):
 def get_processes():
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Processes")
+    processes = cur.fetchall()
+    return processes
+
+
+def get_active_processes():
+    cur = conn.cursor()
+    cur.execute('''
+        SELECT p.deleted, p.id, p.fecha_inicio, p.stage, t.temperature as current_temperature,
+         f.name as fermenter, c.name as carbonator, b.name as beer, b.id as beer_id,
+          b.maduration_temp as maduration_temp, b.fermentation_temp as fermentation_temp
+        FROM Processes p 
+        LEFT JOIN Temperatures t ON t.process_id = p.id
+        JOIN Fermenters f ON f.id = p.fermenter_id 
+        LEFT JOIN Carbonators c ON p.carbonator_id = c.id
+        JOIN Beers b ON p.beer_id = b.id 
+        WHERE p.state = 1 
+            and (t.`timestamp` in (SELECT max(t.`timestamp`)
+                                    FROM Processes p JOIN Temperatures t ON t.process_id = p.id 
+                                    GROUP BY p.id)
+            or t.`timestamp` is null)
+            and p.deleted = false
+    ''')
     processes = cur.fetchall()
     return processes
 
