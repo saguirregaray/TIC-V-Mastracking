@@ -66,13 +66,12 @@ def insert_process():
         if request.method == 'POST':
             fecha_inicio = time.time()
             fecha_fin = pymysql.NULL
-            state = request.json['state']  # Esto se deberia setear aca?
-            stage = request.json['stage']  # Esto se deberia setear aca?
+            state = 1 
+            stage = 'fermentation'
             fermenter_id = request.json['fermenter_id']
-            carbonator_id = request.json['carbonator_id']
             beer_id = request.json['beer_id']
             return jsonify(result=db.insert_process(fecha_inicio, fecha_fin, stage,
-                                                    state, fermenter_id, carbonator_id, beer_id))
+                                                    state, fermenter_id, beer_id))
     except Exception as e:
         return e.__cause__
 
@@ -145,6 +144,22 @@ def get_carbonators():
 
 
 @cross_origin()
+@app.route('/carbonator', methods=['delete'])
+def delete_carbonator():
+    """
+       This method deletes a carbonator given an id.
+
+       :return: None
+   """
+    try:
+        if request.method == 'DELETE':
+            carbonator_id = request.json["id"]
+            return jsonify(result=db.delete_carbonator(carbonator_id))
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
 @app.route('/free_carbonators', methods=['get'])
 def get_free_carbonators():
     """
@@ -205,6 +220,22 @@ def get_fermenters():
     try:
         if request.method == 'GET':
             return jsonify(result=db.get_fermenters())
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/fermenter', methods=['delete'])
+def delete_fermenter():
+    """
+       This method deletes a fermenter given an id.
+
+       :return: None
+   """
+    try:
+        if request.method == 'DELETE':
+            fermenter_id = request.json["id"]
+            return jsonify(result=db.delete_fermenter(fermenter_id))
     except Exception as e:
         return e.__cause__
 
