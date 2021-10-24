@@ -23,7 +23,7 @@ CREATE TABLE Processes (
 	fecha_inicio TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	fecha_finalizacion TIMESTAMP,
 	stage varchar(20),
-	state varchar(20),
+	state bool,
 	fermenter_id INT,
 	carbonator_id INT,
 	beer_id INT,

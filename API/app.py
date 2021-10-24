@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 
 import pymysql
 from flask import jsonify
@@ -24,7 +25,8 @@ def insert_process():
    """
     try:
         if request.method == 'POST':
-            fecha_inicio = time.time()
+            ts = time.time()
+            fecha_inicio = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
             fecha_fin = pymysql.NULL
             state = 1 
             stage = 'fermentation'
@@ -47,10 +49,24 @@ def get_process():
     try:
         if request.method == 'GET':
             process_id = request.json["id"]
-            return db.get_process(process_id)
+            return jsonify(db.get_process(process_id))
     except Exception as e:
         return e.__cause__
 
+
+@cross_origin()
+@app.route('/process/active', methods=['get'])
+def get_active_processes():
+    """
+        This method gets all active processes.
+
+        :return: The process records
+    """
+    try:
+        if request.method == 'GET':
+            return jsonify(db.get_active_processes())
+    except Exception as e:
+        return e.__cause__
 
 '''CARBONATOR'''
 
@@ -299,7 +315,8 @@ def insert_temperature():
     try:
         if request.method == 'POST':
             temperature = request.json['temperature']
-            timestamp = time.time()
+            ts = time.time()
+            timestamp = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
             process_id = request.json['process_id']
             return jsonify(result=db.insert_temperature(temperature, timestamp, process_id))
     except Exception as e:
