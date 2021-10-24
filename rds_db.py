@@ -31,7 +31,7 @@ def get_process(process_id):
 
 def get_processes():
     cur = conn.cursor()
-    cur.execute(f"SELECT *  FROM Processes")
+    cur.execute(f"SELECT *  FROM Processes WHERE deleted = false")
     processes = cur.fetchall()
     return processes
 
@@ -63,7 +63,7 @@ def delete_beer(beer_id):
 
 def get_beers():
     cur = conn.cursor()
-    cur.execute(f"SELECT * FROM Beers")
+    cur.execute(f"SELECT * FROM Beers WHERE deleted = false")
     beer = cur.fetchall()
     return beer
 
@@ -88,7 +88,7 @@ def get_carbonator(carbonator_id):
 
 def get_carbonators():
     cur = conn.cursor()
-    cur.execute(f"SELECT * FROM Carbonators")
+    cur.execute(f"SELECT * FROM Carbonators WHERE deleted = false")
     carbonators = cur.fetchall()
     return carbonators
 
