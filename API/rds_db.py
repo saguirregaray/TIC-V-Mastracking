@@ -38,7 +38,7 @@ def get_processes():
 def get_active_processes():
     cur = conn.cursor()
     cur.execute('''
-        SELECT p.deleted, p.id, p.fecha_inicio, p.stage, t.temperature as currentTemperature, f.name as fermenter, c.name as carbonator, b.name as beer, b.maduration_temp as madurationTemp, b.fermentation_temp as fermentationTemp
+        SELECT p.id, p.fecha_inicio, p.stage, t.temperature as current_temperature, f.name as fermenter, c.name as carbonator, b.name as beer, b.maduration_temp as maduration_temp, b.fermentation_temp as fermentation_temp
         FROM Processes p 
         LEFT JOIN Temperatures t ON t.process_id = p.id
         JOIN Fermenters f ON f.id = p.fermenter_id 
