@@ -302,3 +302,4 @@ modules.xml
 # Sonarlint plugin
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij+all,pycharm+all,flask
+.vscode/launch.json

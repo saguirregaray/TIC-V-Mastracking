@@ -181,8 +181,8 @@ def get_free_fermenters():
 
 def insert_temperature(temperature, timestamp, process_id):
     cur = conn.cursor()
-    cur.execute(f"INSERT INTO Temperatures (timestamp, temperature, process_id) "
-                f"VALUES ({timestamp}, {temperature}, {process_id})")
+    cur.execute(f'''INSERT INTO Temperatures (timestamp, temperature, process_id) 
+                  VALUES ("{timestamp}", {temperature}, {process_id})''')
     conn.commit()
     return get_temperature(cur.lastrowid)
 
