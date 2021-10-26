@@ -43,9 +43,7 @@ celery.config_from_object(celeryconfig)
 '''EMAIL'''
 
 
-# @celery.task(name='tasks.alarm')
-@cross_origin()
-@app.route('/alarmTest', methods=['get'])
+@celery.task(name='tasks.alarm')
 def alert():
     active_processes = db.get_active_processes()
     for process in active_processes:
