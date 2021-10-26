@@ -2,14 +2,54 @@ import time
 from datetime import datetime
 
 import pymysql
-from flask import jsonify
-from flask import Flask, request
-from API import rds_db as db
+from celery import Celery
+from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
+from flask_mail import Mail, Message
+
+import rds_db as db
+from resources.config import celeryconfig
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = '1234567'
+
+# CORS configuration
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
+
+# Flask-Mail configuration
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = 'mastraking.uy@gmail.com'
+app.config['MAIL_PASSWORD'] = 'mastracking_uy'
+
+# Celery configuration
+app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
+app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+
+# Initialize extensions
+mail = Mail(app)
+
+# Initialize Celery
+celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+celery.conf.update(app.config)
+celery.config_from_object(celeryconfig)
+
+'''EMAIL'''
+
+
+@celery.task(name='tasks.email')
+def send_async_email():
+    """Background task to send an email with Flask-Mail."""
+    msg = Message(subject='MasTracking',
+                  sender='mastraking.uy@gmail.com',
+                  recipients=['seraguirregaray@gmail.com'])
+    msg.body = 'Mastracking alert service: There was an error'
+    with app.app_context():
+        mail.send(msg)
+
 
 '''PROCESS'''
 
@@ -335,6 +375,56 @@ def get_temperature():
         if request.method == 'GET':
             process_id = request.json['id']
             return db.get_temperature(process_id)
+    except Exception as e:
+        return e.__cause__
+
+
+'''ALERTS'''
+
+
+@cross_origin()
+@app.route('/alert', methods=['post'])
+def insert_alert():
+    """
+      This method receives a description of the alert and creates a new instance with the corresponding timestamp.
+
+      :return: The alert record
+  """
+    try:
+        if request.method == 'POST':
+            description = request.json['description']
+            return jsonify(result=db.insert_alert(description))
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/alert', methods=['get'])
+def get_alert():
+    """
+        This method gets an alert given an id.
+
+        :return: The alert record.
+    """
+    try:
+        if request.method == 'GET':
+            id = request.json['id']
+            return db.get_alert(id)
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/alerts', methods=['get'])
+def get_alerts():
+    """
+        This method gets all the alert records.
+
+        :return: The alert records
+    """
+    try:
+        if request.method == 'GET':
+            return jsonify(result=db.get_alerts())
     except Exception as e:
         return e.__cause__
 
