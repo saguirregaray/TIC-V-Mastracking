@@ -50,6 +50,9 @@ CREATE TABLE Temperatures (
 
 CREATE TABLE Alerts (
     id int UNIQUE NOT NULL AUTO_INCREMENT,
+    process_id int,
+    alert_timestamp timestamp,
+    stage varchar(20),
     description varchar(500),
     deleted boolean NOT NULL DEFAULT false,
     timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

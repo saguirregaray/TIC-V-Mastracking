@@ -47,21 +47,23 @@ celery.config_from_object(celeryconfig)
 def alert():
     active_processes = db.get_active_processes()
     for process in active_processes:
-        if set_alarm(process):
-            send_async_email()
+        evaluate_alarm(process)
 
 
-def send_async_email():
+def send_async_email(process_id, description, stage, timestamp):
     """Background task to send an email with Flask-Mail."""
-    msg = Message(subject='MasTracking',
+    msg = Message(subject='Mastracking alert service: There was an error',
                   sender='mastraking.uy@gmail.com',
                   recipients=['seraguirregaray@gmail.com'])
-    msg.body = 'Mastracking alert service: There was an error'
+    msg.body = f"{description}\n" \
+               f"\nThe process (id: {process_id}) was in the '{stage}' stage.\n" \
+               f"\nDate and time: {timestamp}\n"
     with app.app_context():
         mail.send(msg)
 
 
-def set_alarm(process):
+def evaluate_alarm(process):
+    process_id = process['id']
     temp = process['current_temperature']
     temp_id = process['temp_id']
     stage = process['stage']
@@ -78,9 +80,10 @@ def set_alarm(process):
         db.modify_target_temp(temp_id, target_temp)
 
     if temp is None or abs(temp - target_temp) >= app.config['THRESHOLD']:
-        return True
-    else:
-        return False
+        description = f"ERROR: The target temperature was: {target_temp} and the actual temp is: {temp}."
+        timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+        db.insert_alert(process_id, description, stage, timestamp)
+        send_async_email(process_id, description, stage, timestamp)
 
 
 '''PROCESS'''
@@ -389,7 +392,6 @@ def insert_temperature():
             ts = time.time()
             timestamp = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
             temperature = request.json['temperature']
-            timestamp = time.time()
             process_id = request.json['process_id']
             return jsonify(result=db.insert_temperature(temperature, timestamp, process_id))
     except Exception as e:
@@ -442,8 +444,12 @@ def insert_alert():
   """
     try:
         if request.method == 'POST':
+            process_id = request.json['process_id']
+            stage = request.json['stage']
+            ts = time.time()
+            timestamp = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
             description = request.json['description']
-            return jsonify(result=db.insert_alert(description))
+            return jsonify(result=db.insert_alert(process_id, description, stage, timestamp))
     except Exception as e:
         return e.__cause__
 
