@@ -94,17 +94,27 @@ def get_beers():
 '''CARBONATOR'''
 
 
-def insert_carbonator(name):
-    cur = conn.cursor()
-    cur.execute(f"INSERT INTO Carbonators (name) "
-                f"VALUES ('{name}')")
-    conn.commit()
-    return get_carbonator(cur.lastrowid)
+def insert_carbonator(name, physical_id):
+    if get_carbonator_by_physical(physical_id) is None:
+        cur = conn.cursor()
+        cur.execute(f"INSERT INTO Carbonators (name, physical_id) "
+                    f"VALUES ('{name}', {physical_id})")
+        conn.commit()
+        return get_carbonator(cur.lastrowid)
+    else:
+        return f"There is already a Carbonator with the physical id {physical_id}", 500
 
 
 def get_carbonator(carbonator_id):
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Carbonators WHERE id = {carbonator_id} AND deleted = false")
+    carbonator = cur.fetchone()
+    return carbonator
+
+
+def get_carbonator_by_physical(physical_id):
+    cur = conn.cursor()
+    cur.execute(f"SELECT *  FROM Carbonators WHERE physical_id = {physical_id} AND deleted = false")
     carbonator = cur.fetchone()
     return carbonator
 
@@ -137,17 +147,27 @@ def get_free_carbonators():
 '''FERMENTER'''
 
 
-def insert_fermenter(name):
+def insert_fermenter(name, physical_id):
     cur = conn.cursor()
-    cur.execute(f"INSERT INTO Fermenters (name) "
-                f"VALUES ('{name}')")
-    conn.commit()
-    return get_fermenter(cur.lastrowid)
+    if get_fermenter_by_physical(physical_id) is None:
+        cur.execute(f"INSERT INTO Fermenters (name, physical_id) "
+                    f"VALUES ('{name}', {physical_id})")
+        conn.commit()
+        return get_fermenter(cur.lastrowid)
+    else:
+        return f"There is already a Fermenter with the physical id {physical_id}", 500
 
 
 def get_fermenter(fermenter_id):
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Fermenters WHERE id = {fermenter_id} AND deleted = false")
+    fermenter = cur.fetchone()
+    return fermenter
+
+
+def get_fermenter_by_physical(physical_id):
+    cur = conn.cursor()
+    cur.execute(f"SELECT *  FROM Fermenters WHERE physical_id = {physical_id} AND deleted = false")
     fermenter = cur.fetchone()
     return fermenter
 
