@@ -7,7 +7,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 
 CELERYBEAT_SCHEDULE = {
     'sends-email-every-1-hour': {
-        'task': 'tasks.email',
+        'task': 'tasks.alarm',
         'schedule': timedelta(minutes=1)
     },
 }
