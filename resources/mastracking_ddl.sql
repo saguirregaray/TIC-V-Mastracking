@@ -41,6 +41,7 @@ CREATE TABLE Temperatures (
     id int UNIQUE NOT NULL AUTO_INCREMENT,
 	timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	temperature float,
+	target_temperature float,
 	process_id INT,
 	deleted boolean NOT NULL DEFAULT false,
 	PRIMARY KEY (id),

@@ -63,8 +63,10 @@ def send_async_email():
 
 def set_alarm(process):
     temp = process['current_temperature']
+    temp_id = process['temp_id']
     stage = process['stage']
     beer_id = process['beer_id']
+    target_temp = process['target_temperature']
     if stage == "fermentation":
         expected_temp = db.get_beer(beer_id)['fermentation_temp']
     elif stage == "carbonation":
@@ -72,7 +74,10 @@ def set_alarm(process):
     else:
         expected_temp = db.get_beer(beer_id)['maduration_temp']
 
-    if temp is None or abs(temp - expected_temp) >= app.config['THRESHOLD']:
+    if expected_temp != target_temp:
+        db.modify_target_temp(temp_id, target_temp)
+
+    if temp is None or abs(temp - target_temp) >= app.config['THRESHOLD']:
         return True
     else:
         return False
@@ -384,6 +389,7 @@ def insert_temperature():
             ts = time.time()
             timestamp = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
             temperature = request.json['temperature']
+            timestamp = time.time()
             process_id = request.json['process_id']
             return jsonify(result=db.insert_temperature(temperature, timestamp, process_id))
     except Exception as e:
@@ -402,6 +408,23 @@ def get_temperature():
         if request.method == 'GET':
             process_id = request.json['id']
             return db.get_temperature(process_id)
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/temperature', methods=['put'])
+def modify_temperature():
+    """
+        This method gets a temperature record from a given process_id and modifies the target temperature
+
+        :return: The temperature record
+    """
+    try:
+        if request.method == 'PUT':
+            temp_id = request.json['id']
+            target_temperature = request.json['target_temperature']
+            return db.modify_target_temp(temp_id, target_temperature)
     except Exception as e:
         return e.__cause__
 

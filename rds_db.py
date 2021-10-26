@@ -41,7 +41,8 @@ def get_active_processes():
     cur.execute('''
         SELECT p.deleted, p.id, p.fecha_inicio, p.stage, t.temperature as current_temperature,
          f.name as fermenter, c.name as carbonator, b.name as beer, b.id as beer_id,
-          b.maduration_temp as maduration_temp, b.fermentation_temp as fermentation_temp
+          b.maduration_temp as maduration_temp, b.fermentation_temp as fermentation_temp,
+          t.target_temperature as target_temperature, t.id as temp_id
         FROM Processes p 
         LEFT JOIN Temperatures t ON t.process_id = p.id
         JOIN Fermenters f ON f.id = p.fermenter_id 
@@ -162,6 +163,7 @@ def delete_fermenter(fermenter_id):
     cur = conn.cursor()
     cur.execute(f"UPDATE Fermenters SET deleted = {True} WHERE id = {fermenter_id}")
     fermenter = cur.fetchone()
+    conn.commit()
     return fermenter
 
 
@@ -192,6 +194,13 @@ def get_temperature(temp_id):
     cur.execute(f"SELECT *  FROM Temperatures WHERE id = {temp_id}  AND deleted = false")
     temperature = cur.fetchone()
     return temperature
+
+
+def modify_target_temp(temp_id, target_temperature):
+    cur = conn.cursor()
+    cur.execute(f"UPDATE Temperatures SET target_temperature = {target_temperature} WHERE id = {temp_id}")
+    conn.commit()
+    return get_temperature(temp_id)
 
 
 '''ALERTS'''
