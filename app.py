@@ -136,20 +136,6 @@ def get_active_processes():
         return e.__cause__
 
 
-@cross_origin()
-@app.route('/process/active', methods=['get'])
-def get_active_processes():
-    """
-        This method gets all active processes.
-
-        :return: The process records
-    """
-    try:
-        if request.method == 'GET':
-            return jsonify(db.get_active_processes())
-    except Exception as e:
-        return e.__cause__
-
 '''CARBONATOR'''
 
 
