@@ -2,6 +2,7 @@ CREATE TABLE Carbonators (
     id int UNIQUE NOT NULL AUTO_INCREMENT,
     name varchar(30),
     deleted boolean NOT NULL DEFAULT false,
+    physical_id int NOT NULL,
 	PRIMARY KEY (id)
 );
 
@@ -9,6 +10,7 @@ CREATE TABLE Fermenters (
     id int UNIQUE NOT NULL AUTO_INCREMENT,
     name varchar(30),
     deleted boolean NOT NULL DEFAULT false,
+    physical_id int NOT NULL,
 	PRIMARY KEY (id)
 );
 
