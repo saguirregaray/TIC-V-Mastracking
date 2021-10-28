@@ -206,10 +206,10 @@ def modify_target_temp(temp_id, target_temperature):
 '''ALERTS'''
 
 
-def insert_alert(description):
+def insert_alert(process_id, description, stage, timestamp):
     cur = conn.cursor()
-    cur.execute(f"INSERT INTO Alerts (description) "
-                f"VALUES ('{description}')")
+    cur.execute(f"INSERT INTO Alerts (process_id, description, stage, alert_timestamp) "
+                f"VALUES ('{process_id}', '{description}', '{stage}', '{timestamp}')")
     conn.commit()
     return get_alert(cur.lastrowid)
 
