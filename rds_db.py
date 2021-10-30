@@ -201,10 +201,10 @@ def get_free_fermenters():
 '''TEMPERATURE'''
 
 
-def insert_temperature(temperature, timestamp, process_id):
+def insert_temperature(temperature, timestamp, process_id, target_temperature):
     cur = conn.cursor()
-    cur.execute(f'''INSERT INTO Temperatures (timestamp, temperature, process_id) 
-                  VALUES ("{timestamp}", {temperature}, {process_id})''')
+    cur.execute(f'''INSERT INTO Temperatures (timestamp, temperature, process_id, target_temperature) 
+                  VALUES ("{timestamp}", {temperature}, {process_id}, {target_temperature})''')
     conn.commit()
     return get_temperature(cur.lastrowid)
 

@@ -393,9 +393,10 @@ def insert_temperature():
         if request.method == 'POST':
             ts = time.time()
             timestamp = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+            target_temperature = request.json['target_temperature']
             temperature = request.json['temperature']
             process_id = request.json['process_id']
-            return jsonify(result=db.insert_temperature(temperature, timestamp, process_id))
+            return jsonify(result=db.insert_temperature(temperature, timestamp, process_id, target_temperature))
     except Exception as e:
         return e.__cause__
 
