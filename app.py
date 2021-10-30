@@ -22,8 +22,8 @@ app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USERNAME'] = 'mastraking.uy@gmail.com'
-app.config['MAIL_PASSWORD'] = 'mastracking_uy'
+app.config['MAIL_USERNAME'] = 'mastracking.um@gmail.com'
+app.config['MAIL_PASSWORD'] = 'Mastracking_uy'
 
 # Celery configuration
 app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
@@ -489,4 +489,4 @@ def get_alerts():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0')
