@@ -159,7 +159,8 @@ def insert_carbonator():
         if request.method == 'POST':
             name = request.json['name']
             physical_id = request.json['physical_id']
-            return jsonify(result=db.insert_carbonator(name, physical_id))
+            result, status =db.insert_carbonator(name, physical_id)
+            return jsonify(result=result, status=status)
     except Exception as e:
         return e.__cause__
 
@@ -240,9 +241,11 @@ def insert_fermenter():
   """
     try:
         if request.method == 'POST':
+            print(request)
             name = request.json['name']
             physical_id = request.json['physical_id']
-            return jsonify(result=db.insert_fermenter(name, physical_id))
+            result, status = db.insert_fermenter(name, physical_id)
+            return jsonify(result=result, status=status)
     except Exception as e:
         return e.__cause__
 

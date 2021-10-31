@@ -100,9 +100,9 @@ def insert_carbonator(name, physical_id):
         cur.execute(f"INSERT INTO Carbonators (name, physical_id) "
                     f"VALUES ('{name}', {physical_id})")
         conn.commit()
-        return get_carbonator(cur.lastrowid)
+        return get_carbonator(cur.lastrowid), 200
     else:
-        return f"There is already a Carbonator with the physical id {physical_id}", 500
+        return f"There is already a Carbonator with the physical id {physical_id}", 409
 
 
 def get_carbonator(carbonator_id):
@@ -153,9 +153,9 @@ def insert_fermenter(name, physical_id):
         cur.execute(f"INSERT INTO Fermenters (name, physical_id) "
                     f"VALUES ('{name}', {physical_id})")
         conn.commit()
-        return get_fermenter(cur.lastrowid)
+        return get_fermenter(cur.lastrowid), 200
     else:
-        return f"There is already a Fermenter with the physical id {physical_id}", 500
+        return f"There is already a Fermenter with the physical id {physical_id}", 409
 
 
 def get_fermenter(fermenter_id):
