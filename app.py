@@ -241,7 +241,6 @@ def insert_fermenter():
   """
     try:
         if request.method == 'POST':
-            print(request)
             name = request.json['name']
             physical_id = request.json['physical_id']
             result, status = db.insert_fermenter(name, physical_id)
