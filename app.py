@@ -391,8 +391,7 @@ def insert_temperature():
     """
     try:
         if request.method == 'POST':
-            ts = time.time()
-            timestamp = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+            timestamp = request.json['timestamp']
             target_temperature = request.json['target_temperature']
             temperature = request.json['temperature']
             process_id = request.json['process_id']
