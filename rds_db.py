@@ -26,6 +26,7 @@ def get_process(process_id):
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Processes WHERE id = {process_id} AND deleted = false")
     process = cur.fetchone()
+    conn.commit()
     return process
 
 
@@ -33,6 +34,7 @@ def get_processes():
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Processes WHERE deleted = false")
     processes = cur.fetchall()
+    conn.commit()
     return processes
 
 
@@ -56,6 +58,7 @@ def get_active_processes():
             and p.deleted = false
     ''')
     processes = cur.fetchall()
+    conn.commit()
     return processes
 
 
@@ -74,6 +77,7 @@ def get_beer(beer_id):
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Beers WHERE id = {beer_id} AND deleted = false")
     beer = cur.fetchone()
+    conn.commit()
     return beer
 
 
@@ -81,6 +85,7 @@ def delete_beer(beer_id):
     cur = conn.cursor()
     cur.execute(f"UPDATE Beers SET deleted = {True} WHERE id = {beer_id}")
     beer = cur.fetchone()
+    conn.commit()
     return beer
 
 
@@ -88,6 +93,7 @@ def get_beers():
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM Beers WHERE deleted = false")
     beer = cur.fetchall()
+    conn.commit()
     return beer
 
 
@@ -109,6 +115,7 @@ def get_carbonator(carbonator_id):
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Carbonators WHERE id = {carbonator_id} AND deleted = false")
     carbonator = cur.fetchone()
+    conn.commit()
     return carbonator
 
 
@@ -116,6 +123,7 @@ def get_carbonator_by_physical(physical_id):
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Carbonators WHERE physical_id = {physical_id} AND deleted = false")
     carbonator = cur.fetchone()
+    conn.commit()
     return carbonator
 
 
@@ -123,6 +131,7 @@ def get_carbonators():
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM Carbonators WHERE deleted = false")
     carbonators = cur.fetchall()
+    conn.commit()
     return carbonators
 
 
@@ -130,6 +139,7 @@ def delete_carbonator(carbonator_id):
     cur = conn.cursor()
     cur.execute(f"UPDATE Carbonators SET deleted = {True} WHERE id = {carbonator_id}")
     carbonator = cur.fetchone()
+    conn.commit()
     return carbonator
 
 
@@ -145,6 +155,7 @@ def get_free_carbonators():
                 WHERE p.state = 1 and p.deleted = false)
         ''')
     carbonators = cur.fetchall()
+    conn.commit()
     return carbonators
 
 
@@ -166,6 +177,7 @@ def get_fermenter(fermenter_id):
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Fermenters WHERE id = {fermenter_id} AND deleted = false")
     fermenter = cur.fetchone()
+    conn.commit()
     return fermenter
 
 
@@ -173,6 +185,7 @@ def get_fermenter_by_physical(physical_id):
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Fermenters WHERE physical_id = {physical_id} AND deleted = false")
     fermenter = cur.fetchone()
+    conn.commit()
     return fermenter
 
 
@@ -180,6 +193,7 @@ def get_fermenters():
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM Fermenters WHERE deleted = false")
     fermenters = cur.fetchall()
+    conn.commit()
     return fermenters
 
 
@@ -202,6 +216,7 @@ def get_free_fermenters():
                 JOIN Fermenters f2 ON f2.id = p.fermenter_id 
                 WHERE p.state = 1 and p.deleted = false)
         ''')
+    conn.commit()
     fermenters = cur.fetchall()
     return fermenters
 
@@ -221,6 +236,7 @@ def get_temperature(temp_id):
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Temperatures WHERE id = {temp_id}  AND deleted = false")
     temperature = cur.fetchone()
+    conn.commit()
     return temperature
 
 
@@ -246,6 +262,7 @@ def get_alert(id):
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Alerts WHERE id = {id}  AND deleted = false")
     alert = cur.fetchone()
+    conn.commit()
     return alert
 
 
@@ -253,4 +270,5 @@ def get_alerts():
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM Alerts WHERE deleted = false")
     alerts = cur.fetchall()
+    conn.commit()
     return alerts
