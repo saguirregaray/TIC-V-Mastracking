@@ -100,9 +100,9 @@ def insert_carbonator(name, physical_id):
         cur.execute(f"INSERT INTO Carbonators (name, physical_id) "
                     f"VALUES ('{name}', {physical_id})")
         conn.commit()
-        return get_carbonator(cur.lastrowid)
+        return get_carbonator(cur.lastrowid), 200
     else:
-        return f"There is already a Carbonator with the physical id {physical_id}", 500
+        return f"There is already a Carbonator with the physical id {physical_id}", 409
 
 
 def get_carbonator(carbonator_id):
@@ -135,11 +135,15 @@ def delete_carbonator(carbonator_id):
 
 def get_free_carbonators():
     cur = conn.cursor()
-    cur.execute(f"SELECT Carbonators.id, Carbonators.name FROM Carbonators "
-                f"LEFT JOIN Processes "
-                f"ON Carbonators.id = Processes.carbonator_id "
-                f"WHERE Processes.carbonator_id IS NULL"
-                f"AND deleted = false")
+    cur.execute('''
+            SELECT c.id, c.name 
+            FROM Carbonators c
+            WHERE c.id NOT IN (
+                SELECT c2.id 
+                FROM Processes p
+                JOIN Carbonators c2 ON c2.id = p.carbonator_id 
+                WHERE p.state = 1 and p.deleted = false)
+        ''')
     carbonators = cur.fetchall()
     return carbonators
 
@@ -153,9 +157,9 @@ def insert_fermenter(name, physical_id):
         cur.execute(f"INSERT INTO Fermenters (name, physical_id) "
                     f"VALUES ('{name}', {physical_id})")
         conn.commit()
-        return get_fermenter(cur.lastrowid)
+        return get_fermenter(cur.lastrowid), 200
     else:
-        return f"There is already a Fermenter with the physical id {physical_id}", 500
+        return f"There is already a Fermenter with the physical id {physical_id}", 409
 
 
 def get_fermenter(fermenter_id):
@@ -189,11 +193,15 @@ def delete_fermenter(fermenter_id):
 
 def get_free_fermenters():
     cur = conn.cursor()
-    cur.execute(f"SELECT Fermenters.id, Fermenters.name FROM Fermenters "
-                f"LEFT JOIN Processes "
-                f"ON Fermenters.id = Processes.fermenter_id "
-                f"WHERE Processes.fermenter_id IS NULL"
-                f" AND deleted = false")
+    cur.execute('''
+            SELECT f.id, f.name 
+            FROM Fermenters f
+            WHERE f.id NOT IN (
+                SELECT f2.id 
+                FROM Processes p
+                JOIN Fermenters f2 ON f2.id = p.fermenter_id 
+                WHERE p.state = 1 and p.deleted = false)
+        ''')
     fermenters = cur.fetchall()
     return fermenters
 
