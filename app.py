@@ -171,7 +171,8 @@ def insert_carbonator():
         if request.method == 'POST':
             name = request.json['name']
             physical_id = request.json['physical_id']
-            return jsonify(result=db.insert_carbonator(name, physical_id))
+            result, status =db.insert_carbonator(name, physical_id)
+            return jsonify(result=result, status=status)
     except Exception as e:
         return e.__cause__
 
@@ -254,7 +255,8 @@ def insert_fermenter():
         if request.method == 'POST':
             name = request.json['name']
             physical_id = request.json['physical_id']
-            return jsonify(result=db.insert_fermenter(name, physical_id))
+            result, status = db.insert_fermenter(name, physical_id)
+            return jsonify(result=result, status=status)
     except Exception as e:
         return e.__cause__
 
@@ -403,8 +405,7 @@ def insert_temperature():
     """
     try:
         if request.method == 'POST':
-            ts = time.time()
-            timestamp = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+            timestamp = request.json['timestamp']
             target_temperature = request.json['target_temperature']
             temperature = request.json['temperature']
             process_id = request.json['process_id']
