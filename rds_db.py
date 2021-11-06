@@ -1,4 +1,5 @@
 import pymysql
+
 from resources.config import credentials as rds
 
 conn = pymysql.connect(
@@ -42,7 +43,8 @@ def get_active_processes():
         SELECT p.deleted, p.id, p.fecha_inicio, p.stage, t.temperature as current_temperature,
          f.name as fermenter, c.name as carbonator, b.name as beer, b.id as beer_id,
           b.maduration_temp as maduration_temp, b.fermentation_temp as fermentation_temp,
-          t.target_temperature as target_temperature, t.id as temp_id
+          t.target_temperature as target_temperature, t.id as temp_id, p.alarm_activated, 
+          p.alarm_deactivation_timestamp, p.alarm_hours_deactivated
         FROM Processes p 
         LEFT JOIN Temperatures t ON t.process_id = p.id
         JOIN Fermenters f ON f.id = p.fermenter_id 
@@ -236,7 +238,7 @@ def insert_alert(process_id, description, stage, timestamp):
 
 def get_alert(id):
     cur = conn.cursor()
-    cur.execute(f"SELECT *  FROM Alerts WHERE id = {id}  AND deleted = false")
+    cur.execute(f"SELECT *  FROM Alerts WHERE id = {id} AND deleted = false")
     alert = cur.fetchone()
     return alert
 
@@ -246,3 +248,21 @@ def get_alerts():
     cur.execute(f"SELECT * FROM Alerts WHERE deleted = false")
     alerts = cur.fetchall()
     return alerts
+
+
+def deactivate_alert(process_id, alarm_deactivation_timestamp, alarm_hours_deactivated, alarm_activated):
+    cur = conn.cursor()
+    cur.execute(f"UPDATE Processes SET alarm_activated = {alarm_activated},  "
+                f"alarm_deactivation_timestamp = '{alarm_deactivation_timestamp}', "
+                f"alarm_hours_deactivated = {alarm_hours_deactivated} "
+                f"WHERE id = {process_id}")
+    conn.commit()
+    return get_process(process_id)
+
+
+def activate_alert(process_id, alarm_activated):
+    cur = conn.cursor()
+    cur.execute(f"UPDATE Processes SET alarm_activated = {alarm_activated}  "
+                f"WHERE id = {process_id}")
+    conn.commit()
+    return get_process(process_id)
