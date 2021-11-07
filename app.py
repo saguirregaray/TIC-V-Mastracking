@@ -65,26 +65,11 @@ def send_async_email(process_id, description, stage, timestamp):
 def evaluate_alarm(process):
     process_id = process['id']
     temp = process['current_temperature']
-    temp_id = process['temp_id']
     stage = process['stage']
-    beer_id = process['beer_id']
     target_temp = process['target_temperature']
-    expected_temp = get_expected_temp(stage, beer_id)
-
-    if expected_temp != target_temp:
-        db.modify_target_temp(temp_id, target_temp)
 
     if temp is None or abs(temp - target_temp) >= app.config['THRESHOLD']:
         create_alert(target_temp, temp, process_id, stage, process)
-
-
-def get_expected_temp(stage, beer_id):
-    if stage == "fermentation":
-        return db.get_beer(beer_id)['fermentation_temp']
-    elif stage == "carbonation":
-        return db.get_beer(beer_id)['carbonation_temp']
-    else:
-        return db.get_beer(beer_id)['maduration_temp']
 
 
 def create_alert(target_temp, temp, process_id, stage, process):
@@ -481,6 +466,7 @@ def deactivate_alert():
   """
     try:
         if request.method == 'PUT':
+            print(request.json)
             process_id = request.json['process_id']
             alarm_hours_deactivated = request.json['alarm_hours_deactivated']
             ts = time.time()
