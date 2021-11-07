@@ -466,7 +466,6 @@ def deactivate_alert():
   """
     try:
         if request.method == 'PUT':
-            print(request.json)
             process_id = request.json['process_id']
             alarm_hours_deactivated = request.json['alarm_hours_deactivated']
             ts = time.time()
