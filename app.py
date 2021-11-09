@@ -43,8 +43,8 @@ celery.config_from_object(celeryconfig)
 '''EMAIL'''
 
 
-@celery.task(name='tasks.alarm')
-def alert():
+@celery.task(name='tasks.monitor')
+def monitor():
     active_processes = db.get_active_processes()
     for process in active_processes:
         evaluate_alarm(process)
@@ -65,24 +65,21 @@ def send_async_email(process_id, description, stage, timestamp):
 def evaluate_alarm(process):
     process_id = process['id']
     temp = process['current_temperature']
-    temp_id = process['temp_id']
     stage = process['stage']
-    beer_id = process['beer_id']
     target_temp = process['target_temperature']
-    if stage == "fermentation":
-        expected_temp = db.get_beer(beer_id)['fermentation_temp']
-    elif stage == "carbonation":
-        expected_temp = db.get_beer(beer_id)['carbonation_temp']
-    else:
-        expected_temp = db.get_beer(beer_id)['maduration_temp']
-
-    if expected_temp != target_temp:
-        db.modify_target_temp(temp_id, target_temp)
 
     if temp is None or abs(temp - target_temp) >= app.config['THRESHOLD']:
-        description = f"ERROR: The target temperature was: {target_temp} and the actual temp is: {temp}."
-        timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-        db.insert_alert(process_id, description, stage, timestamp)
+        create_alert(target_temp, temp, process_id, stage, process)
+
+
+def create_alert(target_temp, temp, process_id, stage, process):
+    description = f"ERROR: The target temperature was: {target_temp} and the actual temp is: {temp}."
+    timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+    db.insert_alert(process_id, description, stage, timestamp)
+
+    if (process['alarm_activated'] or
+            (datetime.now() - process['alarm_deactivation_timestamp']).seconds / 3600
+            > process['alarm_hours_deactivated']):
         send_async_email(process_id, description, stage, timestamp)
 
 
@@ -454,6 +451,45 @@ def insert_alert():
             timestamp = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
             description = request.json['description']
             return jsonify(result=db.insert_alert(process_id, description, stage, timestamp))
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/alert/deactivate', methods=['put'])
+def deactivate_alert():
+    """
+      This method receives process id and an amount of hours, and deactivates the alarm for the given process for
+      the given time.
+
+      :return: The process record with the deactivated alarm
+  """
+    try:
+        if request.method == 'PUT':
+            process_id = request.json['process_id']
+            alarm_hours_deactivated = request.json['alarm_hours_deactivated']
+            ts = time.time()
+            alarm_deactivation_timestamp = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+            alarm_activated = False
+            return jsonify(result=db.deactivate_alert(process_id, alarm_deactivation_timestamp, alarm_hours_deactivated,
+                                                      alarm_activated))
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/alert/activate', methods=['put'])
+def activate_alert():
+    """
+      This method receives process id  and activates the alarm for the given process.
+
+      :return: The process record with the deactivated alarm
+  """
+    try:
+        if request.method == 'PUT':
+            process_id = request.json['process_id']
+            alarm_activated = True
+            return jsonify(result=db.activate_alert(process_id, alarm_activated))
     except Exception as e:
         return e.__cause__
 
