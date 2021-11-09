@@ -14,11 +14,11 @@ conn = pymysql.connect(
 '''PROCESS'''
 
 
-def insert_process(fecha_inicio, fecha_fin, stage, state, fermenter_id, beer_id):
+def insert_process(fecha_inicio, fecha_fin, stage, state, fermenter_id, beer_id, name):
     cur = conn.cursor()
     cur.execute(f"INSERT INTO Processes (fecha_inicio, fecha_finalizacion, stage, state, fermenter_id, "
-                f"beer_id) VALUES ('{fecha_inicio}', '{fecha_fin}', '{stage}', '{state}'"
-                f", {fermenter_id}, {beer_id})")
+                f"beer_id, name) VALUES ('{fecha_inicio}', '{fecha_fin}', '{stage}', '{state}'"
+                f", {fermenter_id}, {beer_id}, '{name}')")
     conn.commit()
     return get_process(cur.lastrowid)
 
@@ -46,7 +46,7 @@ def get_active_processes():
          f.name as fermenter, c.name as carbonator, b.name as beer, b.id as beer_id,
           b.maduration_temp as maduration_temp, b.fermentation_temp as fermentation_temp,
           t.target_temperature as target_temperature, t.id as temp_id, p.alarm_activated, 
-          p.alarm_deactivation_timestamp, p.alarm_hours_deactivated
+          p.alarm_deactivation_timestamp, p.alarm_hours_deactivated, p.name
         FROM Processes p 
         LEFT JOIN Temperatures t ON t.process_id = p.id
         JOIN Fermenters f ON f.id = p.fermenter_id 
