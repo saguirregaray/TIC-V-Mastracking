@@ -64,11 +64,13 @@ def send_async_email(process_id, description, stage, timestamp):
 
 def evaluate_alarm(process):
     process_id = process['id']
+    timestamp = process['timestamp']
     temp = process['current_temperature']
     stage = process['stage']
     target_temp = process['target_temperature']
 
-    if temp is None or abs(temp - target_temp) >= app.config['THRESHOLD']:
+    if temp is None or abs(temp - target_temp) >= app.config['THRESHOLD'] or (
+            (datetime.now() - timestamp).seconds / 3600) > 1:
         create_alert(target_temp, temp, process_id, stage, process)
 
 
@@ -100,7 +102,7 @@ def insert_process():
             ts = time.time()
             fecha_inicio = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
             fecha_fin = pymysql.NULL
-            state = 1 
+            state = 1
             stage = 'fermentation'
             fermenter_id = request.json['fermenter_id']
             beer_id = request.json['beer_id']
@@ -156,7 +158,7 @@ def insert_carbonator():
         if request.method == 'POST':
             name = request.json['name']
             physical_id = request.json['physical_id']
-            result, status =db.insert_carbonator(name, physical_id)
+            result, status = db.insert_carbonator(name, physical_id)
             return jsonify(result=result, status=status)
     except Exception as e:
         return e.__cause__
