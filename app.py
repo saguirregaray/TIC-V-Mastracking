@@ -52,12 +52,12 @@ def monitor():
 
 def send_async_email(process_id, description, stage, timestamp):
     """Background task to send an email with Flask-Mail."""
-    msg = Message(subject='Mastracking alert service: There was an error',
+    msg = Message(subject='Mastracking servicio de alertas: ERROR',
                   sender='mastraking.uy@gmail.com',
                   recipients=['seraguirregaray@gmail.com'])
     msg.body = f"{description}\n" \
-               f"\nThe process (id: {process_id}) was in the '{stage}' stage.\n" \
-               f"\nDate and time: {timestamp}\n"
+               f"\nEl proceso (id: {process_id}) estaba en el estado '{stage}'.\n" \
+               f"\nFecha y hora: {timestamp}\n"
     with app.app_context():
         mail.send(msg)
 
@@ -73,7 +73,7 @@ def evaluate_alarm(process):
 
 
 def create_alert(target_temp, temp, process_id, stage, process):
-    description = f"ERROR: The target temperature was: {target_temp} and the actual temp is: {temp}."
+    description = f"ERROR: La temperature objetivo era: {target_temp}, pero la actual es: {temp}."
     timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
     db.insert_alert(process_id, description, stage, timestamp)
 
