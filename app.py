@@ -66,26 +66,11 @@ def send_async_email(process_id, description, stage, timestamp):
 def evaluate_alarm(process):
     process_id = process['id']
     temp = process['current_temperature']
-    temp_id = process['temp_id']
     stage = process['stage']
-    beer_id = process['beer_id']
     target_temp = process['target_temperature']
-    expected_temp = get_expected_temp(stage, beer_id)
-
-    if expected_temp != target_temp:
-        db.modify_target_temp(temp_id, target_temp)
 
     if temp is None or abs(temp - target_temp) >= app.config['THRESHOLD']:
         create_alert(target_temp, temp, process_id, stage, process)
-
-
-def get_expected_temp(stage, beer_id):
-    if stage == "fermentation":
-        return db.get_beer(beer_id)['fermentation_temp']
-    elif stage == "carbonation":
-        return db.get_beer(beer_id)['carbonation_temp']
-    else:
-        return db.get_beer(beer_id)['maduration_temp']
 
 
 def create_alert(target_temp, temp, process_id, stage, process):
@@ -116,12 +101,14 @@ def insert_process():
             ts = time.time()
             fecha_inicio = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
             fecha_fin = pymysql.NULL
+            now  = datetime.now()
+            name = str(now.year) + str(now.month) + str(now.day)
             state = 1
             stage = 'fermentation'
             fermenter_id = request.json['fermenter_id']
             beer_id = request.json['beer_id']
             return jsonify(result=db.insert_process(fecha_inicio, fecha_fin, stage,
-                                                    state, fermenter_id, beer_id))
+                                                    state, fermenter_id, beer_id, name))
     except Exception as e:
         return e.__cause__
 
@@ -172,7 +159,8 @@ def insert_carbonator():
         if request.method == 'POST':
             name = request.json['name']
             physical_id = request.json['physical_id']
-            return jsonify(result=db.insert_carbonator(name, physical_id))
+            result, status =db.insert_carbonator(name, physical_id)
+            return jsonify(result=result, status=status)
     except Exception as e:
         return e.__cause__
 
@@ -255,7 +243,8 @@ def insert_fermenter():
         if request.method == 'POST':
             name = request.json['name']
             physical_id = request.json['physical_id']
-            return jsonify(result=db.insert_fermenter(name, physical_id))
+            result, status = db.insert_fermenter(name, physical_id)
+            return jsonify(result=result, status=status)
     except Exception as e:
         return e.__cause__
 
@@ -404,8 +393,7 @@ def insert_temperature():
     """
     try:
         if request.method == 'POST':
-            ts = time.time()
-            timestamp = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+            timestamp = request.json['timestamp']
             target_temperature = request.json['target_temperature']
             temperature = request.json['temperature']
             process_id = request.json['process_id']

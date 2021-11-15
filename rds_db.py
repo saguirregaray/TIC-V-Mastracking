@@ -14,11 +14,11 @@ conn = pymysql.connect(
 '''PROCESS'''
 
 
-def insert_process(fecha_inicio, fecha_fin, stage, state, fermenter_id, beer_id):
+def insert_process(fecha_inicio, fecha_fin, stage, state, fermenter_id, beer_id, name):
     cur = conn.cursor()
     cur.execute(f"INSERT INTO Processes (fecha_inicio, fecha_finalizacion, stage, state, fermenter_id, "
-                f"beer_id) VALUES ('{fecha_inicio}', '{fecha_fin}', '{stage}', '{state}'"
-                f", {fermenter_id}, {beer_id})")
+                f"beer_id, name) VALUES ('{fecha_inicio}', '{fecha_fin}', '{stage}', '{state}'"
+                f", {fermenter_id}, {beer_id}, '{name}')")
     conn.commit()
     return get_process(cur.lastrowid)
 
@@ -27,6 +27,7 @@ def get_process(process_id):
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Processes WHERE id = {process_id} AND deleted = false")
     process = cur.fetchone()
+    conn.commit()
     return process
 
 
@@ -34,6 +35,7 @@ def get_processes():
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Processes WHERE deleted = false")
     processes = cur.fetchall()
+    conn.commit()
     return processes
 
 
@@ -44,7 +46,7 @@ def get_active_processes():
          f.name as fermenter, c.name as carbonator, b.name as beer, b.id as beer_id,
           b.maduration_temp as maduration_temp, b.fermentation_temp as fermentation_temp,
           t.target_temperature as target_temperature, t.id as temp_id, p.alarm_activated, 
-          p.alarm_deactivation_timestamp, p.alarm_hours_deactivated
+          p.alarm_deactivation_timestamp, p.alarm_hours_deactivated, p.name
         FROM Processes p 
         LEFT JOIN Temperatures t ON t.process_id = p.id
         JOIN Fermenters f ON f.id = p.fermenter_id 
@@ -58,6 +60,7 @@ def get_active_processes():
             and p.deleted = false
     ''')
     processes = cur.fetchall()
+    conn.commit()
     return processes
 
 
@@ -76,6 +79,7 @@ def get_beer(beer_id):
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Beers WHERE id = {beer_id} AND deleted = false")
     beer = cur.fetchone()
+    conn.commit()
     return beer
 
 
@@ -83,6 +87,7 @@ def delete_beer(beer_id):
     cur = conn.cursor()
     cur.execute(f"UPDATE Beers SET deleted = {True} WHERE id = {beer_id}")
     beer = cur.fetchone()
+    conn.commit()
     return beer
 
 
@@ -90,6 +95,7 @@ def get_beers():
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM Beers WHERE deleted = false")
     beer = cur.fetchall()
+    conn.commit()
     return beer
 
 
@@ -102,15 +108,16 @@ def insert_carbonator(name, physical_id):
         cur.execute(f"INSERT INTO Carbonators (name, physical_id) "
                     f"VALUES ('{name}', {physical_id})")
         conn.commit()
-        return get_carbonator(cur.lastrowid)
+        return get_carbonator(cur.lastrowid), 200
     else:
-        return f"There is already a Carbonator with the physical id {physical_id}", 500
+        return f"There is already a Carbonator with the physical id {physical_id}", 409
 
 
 def get_carbonator(carbonator_id):
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Carbonators WHERE id = {carbonator_id} AND deleted = false")
     carbonator = cur.fetchone()
+    conn.commit()
     return carbonator
 
 
@@ -118,6 +125,7 @@ def get_carbonator_by_physical(physical_id):
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Carbonators WHERE physical_id = {physical_id} AND deleted = false")
     carbonator = cur.fetchone()
+    conn.commit()
     return carbonator
 
 
@@ -125,6 +133,7 @@ def get_carbonators():
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM Carbonators WHERE deleted = false")
     carbonators = cur.fetchall()
+    conn.commit()
     return carbonators
 
 
@@ -132,17 +141,23 @@ def delete_carbonator(carbonator_id):
     cur = conn.cursor()
     cur.execute(f"UPDATE Carbonators SET deleted = {True} WHERE id = {carbonator_id}")
     carbonator = cur.fetchone()
+    conn.commit()
     return carbonator
 
 
 def get_free_carbonators():
     cur = conn.cursor()
-    cur.execute(f"SELECT Carbonators.id, Carbonators.name FROM Carbonators "
-                f"LEFT JOIN Processes "
-                f"ON Carbonators.id = Processes.carbonator_id "
-                f"WHERE Processes.carbonator_id IS NULL"
-                f"AND deleted = false")
+    cur.execute('''
+            SELECT c.id, c.name 
+            FROM Carbonators c
+            WHERE c.id NOT IN (
+                SELECT c2.id 
+                FROM Processes p
+                JOIN Carbonators c2 ON c2.id = p.carbonator_id 
+                WHERE p.state = 1 and p.deleted = false)
+        ''')
     carbonators = cur.fetchall()
+    conn.commit()
     return carbonators
 
 
@@ -155,15 +170,16 @@ def insert_fermenter(name, physical_id):
         cur.execute(f"INSERT INTO Fermenters (name, physical_id) "
                     f"VALUES ('{name}', {physical_id})")
         conn.commit()
-        return get_fermenter(cur.lastrowid)
+        return get_fermenter(cur.lastrowid), 200
     else:
-        return f"There is already a Fermenter with the physical id {physical_id}", 500
+        return f"There is already a Fermenter with the physical id {physical_id}", 409
 
 
 def get_fermenter(fermenter_id):
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Fermenters WHERE id = {fermenter_id} AND deleted = false")
     fermenter = cur.fetchone()
+    conn.commit()
     return fermenter
 
 
@@ -171,6 +187,7 @@ def get_fermenter_by_physical(physical_id):
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Fermenters WHERE physical_id = {physical_id} AND deleted = false")
     fermenter = cur.fetchone()
+    conn.commit()
     return fermenter
 
 
@@ -178,6 +195,7 @@ def get_fermenters():
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM Fermenters WHERE deleted = false")
     fermenters = cur.fetchall()
+    conn.commit()
     return fermenters
 
 
@@ -191,11 +209,16 @@ def delete_fermenter(fermenter_id):
 
 def get_free_fermenters():
     cur = conn.cursor()
-    cur.execute(f"SELECT Fermenters.id, Fermenters.name FROM Fermenters "
-                f"LEFT JOIN Processes "
-                f"ON Fermenters.id = Processes.fermenter_id "
-                f"WHERE Processes.fermenter_id IS NULL"
-                f" AND deleted = false")
+    cur.execute('''
+            SELECT f.id, f.name 
+            FROM Fermenters f
+            WHERE f.id NOT IN (
+                SELECT f2.id 
+                FROM Processes p
+                JOIN Fermenters f2 ON f2.id = p.fermenter_id 
+                WHERE p.state = 1 and p.deleted = false)
+        ''')
+    conn.commit()
     fermenters = cur.fetchall()
     return fermenters
 
@@ -215,6 +238,7 @@ def get_temperature(temp_id):
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Temperatures WHERE id = {temp_id}  AND deleted = false")
     temperature = cur.fetchone()
+    conn.commit()
     return temperature
 
 
@@ -250,6 +274,7 @@ def get_alert(id):
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Alerts WHERE id = {id} AND deleted = false")
     alert = cur.fetchone()
+    conn.commit()
     return alert
 
 
@@ -257,6 +282,7 @@ def get_alerts():
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM Alerts WHERE deleted = false")
     alerts = cur.fetchall()
+    conn.commit()
     return alerts
 
 
