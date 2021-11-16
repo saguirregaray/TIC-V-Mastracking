@@ -527,5 +527,25 @@ def get_alerts():
         return e.__cause__
 
 
+@cross_origin()
+@app.route('/alert/temperature', methods=['post'])
+def send_temperature_alert():
+    """
+      This method receives an alert ping from the raspberry and sends.
+
+      :return: The alert record
+  """
+    try:
+        if request.method == 'POST':
+            process_id = request.json['process_id']
+            stage = db.get_process(process_id)['stage']
+            timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+            description = 'ERROR: No se pudo medir la temperatura correctamente'
+            send_async_email(process_id, description, stage, timestamp)
+            return jsonify(result=db.insert_alert(process_id, description, stage, timestamp))
+    except Exception as e:
+        return e.__cause__
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
