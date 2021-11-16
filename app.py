@@ -52,28 +52,30 @@ def monitor():
 
 def send_async_email(process_id, description, stage, timestamp):
     """Background task to send an email with Flask-Mail."""
-    msg = Message(subject='Mastracking alert service: There was an error',
+    msg = Message(subject='Mastracking servicio de alertas: ERROR',
                   sender='mastraking.uy@gmail.com',
                   recipients=['seraguirregaray@gmail.com'])
     msg.body = f"{description}\n" \
-               f"\nThe process (id: {process_id}) was in the '{stage}' stage.\n" \
-               f"\nDate and time: {timestamp}\n"
+               f"\nEl proceso (id: {process_id}) estaba en el estado '{stage}'.\n" \
+               f"\nFecha y hora: {timestamp}\n"
     with app.app_context():
         mail.send(msg)
 
 
 def evaluate_alarm(process):
     process_id = process['id']
+    timestamp = process['timestamp']
     temp = process['current_temperature']
     stage = process['stage']
     target_temp = process['target_temperature']
 
-    if temp is None or abs(temp - target_temp) >= app.config['THRESHOLD']:
+    if temp is None or abs(temp - target_temp) >= app.config['THRESHOLD'] or (
+            (datetime.now() - timestamp).seconds / 3600) > 1:
         create_alert(target_temp, temp, process_id, stage, process)
 
 
 def create_alert(target_temp, temp, process_id, stage, process):
-    description = f"ERROR: The target temperature was: {target_temp} and the actual temp is: {temp}."
+    description = f"ERROR: La temperature objetivo era: {target_temp}, pero la actual es: {temp}."
     timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
     db.insert_alert(process_id, description, stage, timestamp)
 
@@ -100,7 +102,7 @@ def insert_process():
             ts = time.time()
             fecha_inicio = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
             fecha_fin = pymysql.NULL
-            state = 1 
+            state = 1
             stage = 'fermentation'
             fermenter_id = request.json['fermenter_id']
             beer_id = request.json['beer_id']
@@ -156,7 +158,7 @@ def insert_carbonator():
         if request.method == 'POST':
             name = request.json['name']
             physical_id = request.json['physical_id']
-            result, status =db.insert_carbonator(name, physical_id)
+            result, status = db.insert_carbonator(name, physical_id)
             return jsonify(result=result, status=status)
     except Exception as e:
         return e.__cause__

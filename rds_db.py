@@ -50,7 +50,7 @@ def get_active_processes():
          f.name as fermenter, c.name as carbonator, b.name as beer, b.id as beer_id,
           b.maduration_temp as maduration_temp, b.fermentation_temp as fermentation_temp,
           t.target_temperature as target_temperature, t.id as temp_id, p.alarm_activated, 
-          p.alarm_deactivation_timestamp, p.alarm_hours_deactivated
+          p.alarm_deactivation_timestamp, p.alarm_hours_deactivated, t.timestamp
         FROM Processes p 
         LEFT JOIN Temperatures t ON t.process_id = p.id
         JOIN Fermenters f ON f.id = p.fermenter_id 
