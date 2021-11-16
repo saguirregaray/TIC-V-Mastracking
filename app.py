@@ -142,6 +142,25 @@ def get_active_processes():
         return e.__cause__
 
 
+@cross_origin()
+@app.route('/process/stage', methods=['put'])
+def modify_process_stage():
+    """
+        This method modifies the stage of a process.
+
+        :return: The process records
+    """
+    try:
+        if request.method == 'PUT':
+            process_id = request.json["id"]
+            current_stage = request.json["current_stage"]
+            target_stage = request.json["target_stage"]
+            machine_id = request.json["machine_id"]
+            return jsonify(result=db.modify_process_stage(process_id, current_stage, target_stage, machine_id))
+    except Exception as e:
+        return e.__cause__
+
+
 '''CARBONATOR'''
 
 
@@ -298,9 +317,9 @@ def delete_fermenter():
 @app.route('/free_fermenters', methods=['get'])
 def get_free_fermenters():
     """
-        This method gets the free fermenter records.
+        This method gets the free fermenters records.
 
-        :return: The carbonator records
+        :return: The fermenter records
     """
     try:
         if request.method == 'GET':
