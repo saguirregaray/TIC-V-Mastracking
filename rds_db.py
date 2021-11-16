@@ -345,3 +345,46 @@ def activate_alert(process_id, alarm_activated):
     conn.commit()
     pool.release(conn)
     return get_process(process_id)
+
+
+'''MAILS'''
+
+
+def insert_mail(mail_address):
+    conn = pool.get_conn()
+    cur = conn.cursor()
+    cur.execute(f'''INSERT INTO Mails (mail_address) VALUES ("{mail_address}")''')
+    conn.commit()
+    pool.release(conn)
+    return get_mail(mail_address)
+
+
+def get_mails():
+    conn = pool.get_conn()
+    cur = conn.cursor()
+    cur.execute(f"SELECT mail_address FROM Mails")
+    mails = cur.fetchall()
+    conn.commit()
+    pool.release(conn)
+    return mails
+
+
+def get_mail(mail_address):
+    conn = pool.get_conn()
+    cur = conn.cursor()
+    cur.execute(f"SELECT mail_address FROM Mails WHERE mail_address = '{mail_address}'")
+    mails = cur.fetchall()
+    conn.commit()
+    pool.release(conn)
+    return mails
+
+
+def delete_mail(mail_address):
+    conn = pool.get_conn()
+    cur = conn.cursor()
+    cur.execute(f'''DELETE FROM Mails WHERE mail_address = "{mail_address}"''')
+    mail = cur.fetchone()
+    conn.commit()
+    pool.release(conn)
+    return mail
+

@@ -63,3 +63,8 @@ CREATE TABLE Alerts (
     timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY (id)
 );
+
+CREATE TABLE Mails (
+    mail_address varchar(50) UNIQUE NOT NULL
+	PRIMARY KEY (mail_address)
+);
