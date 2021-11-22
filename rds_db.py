@@ -47,7 +47,9 @@ def get_active_processes():
     cur = conn.cursor()
     cur.execute('''
         SELECT p.deleted, p.id, p.fecha_inicio, p.stage, t.temperature as current_temperature,
-         f.name as fermenter, c.name as carbonator, b.name as beer, b.id as beer_id,
+         f.name as fermenter, f.id as fermenter_id, f.physical_id as
+         fermenter_physical_id, c.name as carbonator, c.id as carbonator_id, c.physical_id as
+         carbonator_physical_id, b.name as beer, b.id as beer_id,
           b.maduration_temp as maduration_temp, b.fermentation_temp as fermentation_temp,
           t.target_temperature as target_temperature, t.id as temp_id, p.alarm_activated, 
           p.alarm_deactivation_timestamp, p.alarm_hours_deactivated, t.timestamp

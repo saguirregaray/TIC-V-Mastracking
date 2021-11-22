@@ -86,7 +86,8 @@ def create_alert(target_temp, temp, process_id, stage, process):
         send_async_email(process_id, description, stage, timestamp)
 
 
-def get_physical_id(process):
+def get_physical_id(process_id):
+    process = db.get_process(process_id)
     stage = process['stage']
     if stage == "fermentation":
         return db.get_fermenter(process['fermenter_id'])['physical_id']
@@ -277,21 +278,6 @@ def insert_fermenter():
             physical_id = request.json['physical_id']
             result, status = db.insert_fermenter(name, physical_id)
             return jsonify(result=result, status=status)
-    except Exception as e:
-        return e.__cause__
-
-
-@cross_origin()
-@app.route('/fermenter', methods=['get'])
-def get_fermenter():
-    """
-        This method gets all the free fermenter records.
-
-        :return: The fermenter records
-    """
-    try:
-        if request.method == 'GET':
-            return db.get_fermenters()
     except Exception as e:
         return e.__cause__
 
