@@ -6,6 +6,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from flask_mail import Mail, Message
 from datetime import datetime
+import subprocess
 
 import rds_db as db
 from resources.config import celeryconfig
@@ -50,14 +51,27 @@ def monitor():
         evaluate_alarm(process)
 
 
-def send_async_email(process_id, description, stage, timestamp):
+def send_async_email_to_list(process_id, description, stage, timestamp):
     """Background task to send an email with Flask-Mail."""
+    recipients = db.get_mails()
+    recipients_mails = [rec['mail_address'] for rec in recipients]
     msg = Message(subject='Mastracking servicio de alertas: ERROR',
                   sender='mastraking.uy@gmail.com',
-                  recipients=['seraguirregaray@gmail.com'])
+                  recipients=recipients_mails)
     msg.body = f"{description}\n" \
                f"\nEl proceso (id: {process_id}) estaba en el estado '{stage}'.\n" \
                f"\nFecha y hora: {timestamp}\n"
+    with app.app_context():
+        mail.send(msg)
+
+
+def send_test_email(recipient):
+    """Background task to send an email with Flask-Mail."""
+    msg = Message(subject='Mastracking servicio de alertas',
+                  sender='mastraking.uy@gmail.com',
+                  recipients=[recipient])
+    msg.body = f"Bienvenido!\n" \
+               f"\nMastracking servicio de alertas.\n"
     with app.app_context():
         mail.send(msg)
 
@@ -82,7 +96,7 @@ def create_alert(target_temp, temp, process_id, stage, process):
     if (process['alarm_activated'] or
             (datetime.now() - process['alarm_deactivation_timestamp']).seconds / 3600
             > process['alarm_hours_deactivated']):
-        send_async_email(process_id, description, stage, timestamp)
+        send_async_email_to_list(process_id, description, stage, timestamp)
 
 
 '''PROCESS'''
@@ -457,11 +471,27 @@ def modify_temperature():
     """
     try:
         if request.method == 'PUT':
-            temp_id = request.json['id']
+            process_id = request.json['process_id']
+            process = db.get_process(process_id)
+            physical_id = get_physical_id(process)
             target_temperature = request.json['target_temperature']
-            return db.modify_target_temp(temp_id, target_temperature)
+            temperature = db.get_temperature_by_process(process_id)['temperature']
+            timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+            subprocess.check_call(
+                ("./resources/config/modify_raspberry_temp.sh", str(physical_id), str(target_temperature)))
+            return db.insert_temperature(temperature, timestamp, process_id, target_temperature)
     except Exception as e:
         return e.__cause__
+
+
+def get_physical_id(process):
+    stage = process['stage']
+    if stage == "fermentation":
+        return db.get_fermenter(process['fermenter_id'])['physical_id']
+    elif stage == "carbonation":
+        return db.get_carbonator(process['carbonator_id'])['physical_id']
+    else:
+        return db.get_fermenter(process['fermenter_id'])['physical_id']
 
 
 '''ALERTS'''
@@ -568,6 +598,77 @@ def get_alerts_csv():
     try:
         if request.method == 'GET':
             return db.get_alerts_csv()
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/alert/temperature', methods=['post'])
+def send_temperature_alert():
+    """
+      This method receives an alert ping from the raspberry and sends.
+
+      :return: The alert record
+  """
+    try:
+        if request.method == 'POST':
+            process_id = request.json['process_id']
+            stage = db.get_process(process_id)['stage']
+            timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+            description = 'ERROR: No se pudo medir la temperatura correctamente'
+            send_async_email_to_list(process_id, description, stage, timestamp)
+            return jsonify(result=db.insert_alert(process_id, description, stage, timestamp))
+    except Exception as e:
+        return e.__cause__
+
+
+'''MAILS'''
+
+
+@cross_origin()
+@app.route('/mail', methods=['post'])
+def insert_mail():
+    """
+        This method receives the email address and inserts into the db.
+
+        :return: The mail record
+    """
+    try:
+        if request.method == 'POST':
+            mail_address = request.json['mail_address']
+            send_test_email(mail_address)
+            return jsonify(result=db.insert_mail(mail_address))
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/mails', methods=['get'])
+def get_mails():
+    """
+        This method gets all the mail receivers.
+
+        :return: The list of mails.
+    """
+    try:
+        if request.method == 'GET':
+            return jsonify(result=db.get_mails())
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/mail', methods=['delete'])
+def delete_mail():
+    """
+        This method mail address and deletes it
+
+        :return: None
+    """
+    try:
+        if request.method == 'DELETE':
+            mail_address = request.json['mail_address']
+            return jsonify(result=db.delete_mail(mail_address))
     except Exception as e:
         return e.__cause__
 

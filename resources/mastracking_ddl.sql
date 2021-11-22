@@ -36,6 +36,7 @@ CREATE TABLE Processes (
 	alarm_deactivation_timestamp TIMESTAMP,
 	alarm_hours_deactivated INT,
 	deleted boolean NOT NULL DEFAULT false,
+	name varchar(8),
 	PRIMARY KEY (id),
 	FOREIGN KEY (fermenter_id) REFERENCES Fermenters(id),
 	FOREIGN KEY (carbonator_id) REFERENCES Carbonators(id),
@@ -62,4 +63,9 @@ CREATE TABLE Alerts (
     deleted boolean NOT NULL DEFAULT false,
     timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY (id)
+);
+
+CREATE TABLE Mails (
+    mail_address varchar(50) UNIQUE NOT NULL
+	PRIMARY KEY (mail_address)
 );
