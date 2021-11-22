@@ -99,6 +99,17 @@ def create_alert(target_temp, temp, process_id, stage, process):
         send_async_email_to_list(process_id, description, stage, timestamp)
 
 
+def get_physical_id(process_id):
+    process = db.get_process(process_id)
+    stage = process['stage']
+    if stage == "fermentation":
+        return db.get_fermenter(process['fermenter_id'])['physical_id']
+    elif stage == "carbonation":
+        return db.get_carbonator(process['carbonator_id'])['physical_id']
+    else:
+        return db.get_fermenter(process['fermenter_id'])['physical_id']
+
+
 '''PROCESS'''
 
 
@@ -152,6 +163,31 @@ def get_active_processes():
     try:
         if request.method == 'GET':
             return jsonify(db.get_active_processes())
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/process/stage', methods=['put'])
+def modify_process_stage():
+    """
+        This method modifies the stage of a process.
+
+        :return: The process records
+    """
+    try:
+        if request.method == 'PUT':
+            process_id = request.json["id"]
+            current_stage = request.json["current_stage"]
+            target_stage = request.json["target_stage"]
+            machine_id = request.json["machine_id"]
+
+            if target_stage != 'end':
+                physical_id = get_physical_id(process_id)
+                subprocess.check_call(
+                    ("./resources/config/read_single_temp.sh", str(physical_id)))
+
+            return jsonify(result=db.modify_process_stage(process_id, current_stage, target_stage, machine_id))
     except Exception as e:
         return e.__cause__
 
@@ -293,21 +329,6 @@ def insert_fermenter():
 
 
 @cross_origin()
-@app.route('/fermenter', methods=['get'])
-def get_fermenter():
-    """
-        This method gets all the free fermenter records.
-
-        :return: The fermenter records
-    """
-    try:
-        if request.method == 'GET':
-            return db.get_fermenters()
-    except Exception as e:
-        return e.__cause__
-
-
-@cross_origin()
 @app.route('/fermenters', methods=['get'])
 def get_fermenters():
     """
@@ -342,9 +363,9 @@ def delete_fermenter():
 @app.route('/free_fermenters', methods=['get'])
 def get_free_fermenters():
     """
-        This method gets the free fermenter records.
+        This method gets the free fermenters records.
 
-        :return: The carbonator records
+        :return: The fermenter records
     """
     try:
         if request.method == 'GET':
@@ -612,10 +633,7 @@ def send_temperature_alert():
   """
     try:
         if request.method == 'POST':
-            process_id = request.json['physical_id']
-
-
-
+            process_id = request.json['process_id']
             stage = db.get_process(process_id)['stage']
             timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
             description = 'ERROR: No se pudo medir la temperatura correctamente'
