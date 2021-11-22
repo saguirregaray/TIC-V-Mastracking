@@ -293,12 +293,15 @@ def modify_target_temp(temp_id, target_temperature):
 
 
 def get_temperature_by_process(process_id):
+    conn = pool.get_conn()
     cur = conn.cursor()
     cur.execute(f"SELECT *  FROM Temperatures "
                 f"WHERE process_id = {process_id} "
                 f"AND (timestamp in (SELECT max(timestamp) FROM Temperatures GROUP BY process_id) OR timestamp is null)"
                 f" AND deleted = false")
     temperature = cur.fetchone()
+    conn.commit()
+    pool.release(conn)
     return temperature
 
 
