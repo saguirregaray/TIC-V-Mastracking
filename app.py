@@ -192,6 +192,36 @@ def modify_process_stage():
         return e.__cause__
 
 
+@cross_origin()
+@app.route('/csv/process/active', methods=['get'])
+def get_active_processes_csv():
+    """
+        This method gets all active processes and returns it in csv format.
+        :return: The process records
+    """
+    try:
+        if request.method == 'GET':
+            return db.get_active_processes_csv()
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/csv/process/temperatures', methods=['post'])
+def get_process_temperature_csv():
+    """
+        This method gets a process record from a given process_id and returns all the asociated temp records.
+
+        :return: The process record's tempratures
+    """
+    try:
+        if request.method == 'POST':
+            process_id = request.json["id"]
+            return db.get_process_temperature_csv(process_id)
+    except Exception as e:
+        return e.__cause__
+
+
 '''CARBONATOR'''
 
 
@@ -574,6 +604,21 @@ def get_alerts():
     try:
         if request.method == 'GET':
             return jsonify(result=db.get_alerts())
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/csv/alerts', methods=['get'])
+def get_alerts_csv():
+    """
+        This method gets all the alert records.
+
+        :return: The alert records
+    """
+    try:
+        if request.method == 'GET':
+            return db.get_alerts_csv()
     except Exception as e:
         return e.__cause__
 

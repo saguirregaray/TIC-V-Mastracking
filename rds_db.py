@@ -1,5 +1,8 @@
 from resources.config import credentials as rds
 from pymysqlpool.pool import Pool
+import csv
+from io import StringIO
+from flask import make_response
 
 
 pool = Pool(host=rds.HOST,
@@ -100,6 +103,77 @@ def modify_process_stage(process_id, current_stage, target_stage, machine_id):
     conn.commit()
     pool.release(conn)
     return get_process(process_id)
+
+
+def get_active_processes_csv():
+    si = StringIO()
+    cw = csv.writer(si)
+    conn = pool.get_conn()
+    cur = conn.cursor()
+    cur.execute('''
+        SELECT p.deleted, p.id, p.fecha_inicio, p.stage, t.temperature as current_temperature,
+         f.name as fermenter, c.name as carbonator, b.name as beer, b.id as beer_id,
+          b.maduration_temp as maduration_temp, b.fermentation_temp as fermentation_temp,
+          t.target_temperature as target_temperature, t.id as temp_id, p.alarm_activated, 
+          p.alarm_deactivation_timestamp, p.alarm_hours_deactivated, t.timestamp
+        FROM Processes p 
+        LEFT JOIN Temperatures t ON t.process_id = p.id
+        JOIN Fermenters f ON f.id = p.fermenter_id 
+        LEFT JOIN Carbonators c ON p.carbonator_id = c.id
+        JOIN Beers b ON p.beer_id = b.id 
+        WHERE p.state = 1 
+            and (t.`timestamp` in (SELECT max(t.`timestamp`)
+                                    FROM Processes p JOIN Temperatures t ON t.process_id = p.id 
+                                    GROUP BY p.id)
+            or t.`timestamp` is null)
+            and p.deleted = false
+    ''')
+    rows = cur.fetchall()
+    conn.commit()
+    pool.release(conn)
+    cw.writerow([i[0] for i in cur.description])
+    for row in rows:
+        cw.writerow(row.values())
+    response = make_response(si.getvalue())
+    response.headers['Content-Disposition'] = 'attachment; filename=report.csv'
+    response.headers["Content-type"] = "text/csv"
+    return response
+
+
+def get_process_temperature_csv(process_id):
+    si = StringIO()
+    cw = csv.writer(si)
+    conn = pool.get_conn()
+    cur = conn.cursor()
+    cur.execute(f'''
+        SELECT  p.id,
+                p.fecha_inicio,
+                p.fecha_finalizacion,
+                p.stage,
+                p.state,
+                p.fermenter_id,
+                p.carbonator_id,
+                p.beer_id,
+                p.alarm_activated,
+                p.name,
+                t.timestamp,
+                t.temperature,
+                t.target_temperature
+        FROM Processes p 
+        LEFT JOIN Temperatures t ON t.process_id = p.id
+        WHERE p.deleted = false and p.id = {process_id}
+    ''')
+    rows = cur.fetchall()
+    conn.commit()
+    pool.release(conn)
+
+    cw.writerow([i[0] for i in cur.description])
+    for row in rows:
+        cw.writerow(row.values())
+    response = make_response(si.getvalue())
+    response.headers['Content-Disposition'] = 'attachment; filename=report.csv'
+    response.headers["Content-type"] = "text/csv"
+    return response
 
 
 '''BEER'''
@@ -369,6 +443,25 @@ def get_alerts():
     conn.commit()
     pool.release(conn)
     return alerts
+
+
+def get_alerts_csv():
+    si = StringIO()
+    cw = csv.writer(si)
+    conn = pool.get_conn()
+    cur = conn.cursor()
+    cur.execute(f"SELECT * FROM Alerts WHERE deleted = false")
+    rows = cur.fetchall()
+    conn.commit()
+    pool.release(conn)
+
+    cw.writerow([i[0] for i in cur.description])
+    for row in rows:
+        cw.writerow(row.values())
+    response = make_response(si.getvalue())
+    response.headers['Content-Disposition'] = 'attachment; filename=report.csv'
+    response.headers["Content-type"] = "text/csv"
+    return response
 
 
 def deactivate_alert(process_id, alarm_deactivation_timestamp, alarm_hours_deactivated, alarm_activated):
