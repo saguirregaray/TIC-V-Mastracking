@@ -47,7 +47,9 @@ def get_active_processes():
     cur = conn.cursor()
     cur.execute('''
         SELECT p.deleted, p.id, p.fecha_inicio, p.stage, t.temperature as current_temperature,
-         f.name as fermenter, c.name as carbonator, b.name as beer, b.id as beer_id,
+         f.name as fermenter, f.id as fermenter_id, f.physical_id as
+         fermenter_physical_id, c.name as carbonator, c.id as carbonator_id, c.physical_id as
+         carbonator_physical_id, b.name as beer, b.id as beer_id,
           b.maduration_temp as maduration_temp, b.fermentation_temp as fermentation_temp,
           t.target_temperature as target_temperature, t.id as temp_id, p.alarm_activated, 
           p.alarm_deactivation_timestamp, p.alarm_hours_deactivated, t.timestamp
@@ -67,6 +69,37 @@ def get_active_processes():
     conn.commit()
     pool.release(conn)
     return processes
+
+
+def modify_process_stage(process_id, current_stage, target_stage, machine_id):
+    conn = pool.get_conn()
+    cur = conn.cursor()
+    if current_stage == 'fermentation' and target_stage == "maduration":
+        if machine_id is None:
+            cur.execute(f"UPDATE Processes SET stage = '{target_stage}', state = 1 WHERE id = {process_id}")
+        else:
+            cur.execute(f"UPDATE Processes SET stage = '{target_stage}', fermenter_id = {machine_id},"
+                        f" state = 1 WHERE id = {process_id}")
+    elif current_stage == 'fermentation' and target_stage == "carbonation":
+        cur.execute(f"UPDATE Processes SET stage = '{target_stage}', carbonator_id = {machine_id},"
+                    f" state = 1 WHERE id = {process_id}")
+    elif current_stage == 'maduration' and target_stage == "fermentation":
+        if machine_id is None:
+            cur.execute(f"UPDATE Processes SET stage = '{target_stage}', state = 1 WHERE id = {process_id}")
+        else:
+            cur.execute(f"UPDATE Processes SET stage = '{target_stage}', fermenter_id = {machine_id},"
+                        f" state = 1 WHERE id = {process_id}")
+    elif current_stage == 'maduration' and target_stage == "carbonation":
+        cur.execute(f"UPDATE Processes SET stage = '{target_stage}', carbonator_id = {machine_id},"
+                    f" state = 1 WHERE id = {process_id}")
+    elif current_stage == 'carbonation' and (target_stage == "fermentation" or target_stage == "maduration"):
+        cur.execute(f"UPDATE Processes SET stage = '{target_stage}', fermenter_id = {machine_id},"
+                    f" state = 1 WHERE id = {process_id}")
+    elif target_stage == "end":
+        cur.execute(f"UPDATE Processes SET stage = '{target_stage}', state = 0 WHERE id = {process_id}")
+    conn.commit()
+    pool.release(conn)
+    return get_process(process_id)
 
 
 '''BEER'''
