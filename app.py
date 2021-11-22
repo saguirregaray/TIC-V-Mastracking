@@ -588,7 +588,19 @@ def send_temperature_alert():
   """
     try:
         if request.method == 'POST':
-            process_id = request.json['process_id']
+            physical_id = request.json['physical_id']
+
+            active_processes = db.get_active_processes()
+            process_id = None
+            for process in active_processes:
+                if process['stage'] == 'fermentation' or process['stage'] == 'maduration':
+                    if process['fermenter_id'] == physical_id:
+                        process_id = process['id']
+                        break
+                elif process['carbonator_id'] == physical_id:
+                    process_id = process['id']
+                    break
+
             stage = db.get_process(process_id)['stage']
             timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
             description = 'ERROR: No se pudo medir la temperatura correctamente'
