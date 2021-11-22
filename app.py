@@ -6,6 +6,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from flask_mail import Mail, Message
 from datetime import datetime
+import subprocess
 
 import rds_db as db
 from resources.config import celeryconfig
@@ -85,6 +86,16 @@ def create_alert(target_temp, temp, process_id, stage, process):
         send_async_email(process_id, description, stage, timestamp)
 
 
+def get_physical_id(process):
+    stage = process['stage']
+    if stage == "fermentation":
+        return db.get_fermenter(process['fermenter_id'])['physical_id']
+    elif stage == "carbonation":
+        return db.get_carbonator(process['carbonator_id'])['physical_id']
+    else:
+        return db.get_fermenter(process['fermenter_id'])['physical_id']
+
+
 '''PROCESS'''
 
 
@@ -156,6 +167,9 @@ def modify_process_stage():
             current_stage = request.json["current_stage"]
             target_stage = request.json["target_stage"]
             machine_id = request.json["machine_id"]
+            physical_id = get_physical_id(process_id)
+            subprocess.check_call(
+                ("./resources/config/read_single_temp.sh", str(physical_id)))
             return jsonify(result=db.modify_process_stage(process_id, current_stage, target_stage, machine_id))
     except Exception as e:
         return e.__cause__
