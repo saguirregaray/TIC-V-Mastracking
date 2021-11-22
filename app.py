@@ -181,9 +181,12 @@ def modify_process_stage():
             current_stage = request.json["current_stage"]
             target_stage = request.json["target_stage"]
             machine_id = request.json["machine_id"]
-            physical_id = get_physical_id(process_id)
-            subprocess.check_call(
-                ("./resources/config/read_single_temp.sh", str(physical_id)))
+
+            if target_stage != 'end':
+                physical_id = get_physical_id(process_id)
+                subprocess.check_call(
+                    ("./resources/config/read_single_temp.sh", str(physical_id)))
+
             return jsonify(result=db.modify_process_stage(process_id, current_stage, target_stage, machine_id))
     except Exception as e:
         return e.__cause__
