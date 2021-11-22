@@ -12,12 +12,12 @@ pool.init()
 '''PROCESS'''
 
 
-def insert_process(fecha_inicio, fecha_fin, stage, state, fermenter_id, beer_id):
+def insert_process(fecha_inicio, fecha_fin, stage, state, fermenter_id, beer_id, name):
     conn = pool.get_conn()
     cur = conn.cursor()
     cur.execute(f"INSERT INTO Processes (fecha_inicio, fecha_finalizacion, stage, state, fermenter_id, "
-                f"beer_id) VALUES ('{fecha_inicio}', '{fecha_fin}', '{stage}', '{state}'"
-                f", {fermenter_id}, {beer_id})")
+                f"beer_id, name) VALUES ('{fecha_inicio}', '{fecha_fin}', '{stage}', '{state}'"
+                f", {fermenter_id}, {beer_id}, '{name}')")
     conn.commit()
     pool.release(conn)
     return get_process(cur.lastrowid)
@@ -52,7 +52,7 @@ def get_active_processes():
          carbonator_physical_id, b.name as beer, b.id as beer_id,
           b.maduration_temp as maduration_temp, b.fermentation_temp as fermentation_temp,
           t.target_temperature as target_temperature, t.id as temp_id, p.alarm_activated, 
-          p.alarm_deactivation_timestamp, p.alarm_hours_deactivated, t.timestamp
+          p.alarm_deactivation_timestamp, p.alarm_hours_deactivated, t.timestamp, p.name
         FROM Processes p 
         LEFT JOIN Temperatures t ON t.process_id = p.id
         JOIN Fermenters f ON f.id = p.fermenter_id 
