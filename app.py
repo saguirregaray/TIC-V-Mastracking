@@ -51,37 +51,52 @@ def monitor():
         evaluate_alarm(process)
 
 
-def send_async_email(process_id, description, stage, timestamp):
+def send_async_email_to_list(process_id, description, stage, timestamp):
     """Background task to send an email with Flask-Mail."""
-    msg = Message(subject='Mastracking alert service: There was an error',
+    recipients = db.get_mails()
+    recipients_mails = [rec['mail_address'] for rec in recipients]
+    msg = Message(subject='Mastracking servicio de alertas: ERROR',
                   sender='mastraking.uy@gmail.com',
-                  recipients=['seraguirregaray@gmail.com'])
+                  recipients=recipients_mails)
     msg.body = f"{description}\n" \
-               f"\nThe process (id: {process_id}) was in the '{stage}' stage.\n" \
-               f"\nDate and time: {timestamp}\n"
+               f"\nEl proceso (id: {process_id}) estaba en el estado '{stage}'.\n" \
+               f"\nFecha y hora: {timestamp}\n"
+    with app.app_context():
+        mail.send(msg)
+
+
+def send_test_email(recipient):
+    """Background task to send an email with Flask-Mail."""
+    msg = Message(subject='Mastracking servicio de alertas',
+                  sender='mastraking.uy@gmail.com',
+                  recipients=[recipient])
+    msg.body = f"Bienvenido!\n" \
+               f"\nMastracking servicio de alertas.\n"
     with app.app_context():
         mail.send(msg)
 
 
 def evaluate_alarm(process):
     process_id = process['id']
+    timestamp = process['timestamp']
     temp = process['current_temperature']
     stage = process['stage']
     target_temp = process['target_temperature']
 
-    if temp is None or abs(temp - target_temp) >= app.config['THRESHOLD']:
+    if temp is None or abs(temp - target_temp) >= app.config['THRESHOLD'] or (
+            (datetime.now() - timestamp).seconds / 3600) > 1:
         create_alert(target_temp, temp, process_id, stage, process)
 
 
 def create_alert(target_temp, temp, process_id, stage, process):
-    description = f"ERROR: The target temperature was: {target_temp} and the actual temp is: {temp}."
+    description = f"ERROR: La temperature objetivo era: {target_temp}, pero la actual es: {temp}."
     timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
     db.insert_alert(process_id, description, stage, timestamp)
 
     if (process['alarm_activated'] or
             (datetime.now() - process['alarm_deactivation_timestamp']).seconds / 3600
             > process['alarm_hours_deactivated']):
-        send_async_email(process_id, description, stage, timestamp)
+        send_async_email_to_list(process_id, description, stage, timestamp)
 
 
 '''PROCESS'''
@@ -101,14 +116,12 @@ def insert_process():
             ts = time.time()
             fecha_inicio = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
             fecha_fin = pymysql.NULL
-            now  = datetime.now()
-            name = str(now.year) + str(now.month) + str(now.day)
             state = 1
             stage = 'fermentation'
             fermenter_id = request.json['fermenter_id']
             beer_id = request.json['beer_id']
             return jsonify(result=db.insert_process(fecha_inicio, fecha_fin, stage,
-                                                    state, fermenter_id, beer_id, name))
+                                                    state, fermenter_id, beer_id))
     except Exception as e:
         return e.__cause__
 
@@ -159,7 +172,7 @@ def insert_carbonator():
         if request.method == 'POST':
             name = request.json['name']
             physical_id = request.json['physical_id']
-            result, status =db.insert_carbonator(name, physical_id)
+            result, status = db.insert_carbonator(name, physical_id)
             return jsonify(result=result, status=status)
     except Exception as e:
         return e.__cause__
@@ -540,6 +553,77 @@ def get_alerts():
     try:
         if request.method == 'GET':
             return jsonify(result=db.get_alerts())
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/alert/temperature', methods=['post'])
+def send_temperature_alert():
+    """
+      This method receives an alert ping from the raspberry and sends.
+
+      :return: The alert record
+  """
+    try:
+        if request.method == 'POST':
+            process_id = request.json['process_id']
+            stage = db.get_process(process_id)['stage']
+            timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+            description = 'ERROR: No se pudo medir la temperatura correctamente'
+            send_async_email_to_list(process_id, description, stage, timestamp)
+            return jsonify(result=db.insert_alert(process_id, description, stage, timestamp))
+    except Exception as e:
+        return e.__cause__
+
+
+'''MAILS'''
+
+
+@cross_origin()
+@app.route('/mail', methods=['post'])
+def insert_mail():
+    """
+        This method receives the email address and inserts into the db.
+
+        :return: The mail record
+    """
+    try:
+        if request.method == 'POST':
+            mail_address = request.json['mail_address']
+            send_test_email(mail_address)
+            return jsonify(result=db.insert_mail(mail_address))
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/mails', methods=['get'])
+def get_mails():
+    """
+        This method gets all the mail receivers.
+
+        :return: The list of mails.
+    """
+    try:
+        if request.method == 'GET':
+            return jsonify(result=db.get_mails())
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/mail', methods=['delete'])
+def delete_mail():
+    """
+        This method mail address and deletes it
+
+        :return: None
+    """
+    try:
+        if request.method == 'DELETE':
+            mail_address = request.json['mail_address']
+            return jsonify(result=db.delete_mail(mail_address))
     except Exception as e:
         return e.__cause__
 
