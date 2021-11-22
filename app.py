@@ -6,6 +6,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from flask_mail import Mail, Message
 from datetime import datetime
+import subprocess
 
 import rds_db as db
 from resources.config import celeryconfig
@@ -440,11 +441,27 @@ def modify_temperature():
     """
     try:
         if request.method == 'PUT':
-            temp_id = request.json['id']
+            process_id = request.json['process_id']
+            process = db.get_process(process_id)
+            physical_id = get_physical_id(process)
             target_temperature = request.json['target_temperature']
-            return db.modify_target_temp(temp_id, target_temperature)
+            temperature = db.get_temperature_by_process(process_id)['temperature']
+            timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+            subprocess.check_call(
+                ("./resources/config/modify_raspberry_temp.sh", str(physical_id), str(target_temperature)))
+            return db.insert_temperature(temperature, timestamp, process_id, target_temperature)
     except Exception as e:
         return e.__cause__
+
+
+def get_physical_id(process):
+    stage = process['stage']
+    if stage == "fermentation":
+        return db.get_fermenter(process['fermenter_id'])['physical_id']
+    elif stage == "carbonation":
+        return db.get_carbonator(process['carbonator_id'])['physical_id']
+    else:
+        return db.get_fermenter(process['fermenter_id'])['physical_id']
 
 
 '''ALERTS'''
