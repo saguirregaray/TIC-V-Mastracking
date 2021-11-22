@@ -171,7 +171,7 @@ def get_active_processes_csv():
 
 
 @cross_origin()
-@app.route('/csv/process/temperatures', methods=['get'])
+@app.route('/csv/process/temperatures', methods=['post'])
 def get_process_temperature_csv():
     """
         This method gets a process record from a given process_id and returns all the asociated temp records.
@@ -179,7 +179,7 @@ def get_process_temperature_csv():
         :return: The process record's tempratures
     """
     try:
-        if request.method == 'GET':
+        if request.method == 'POST':
             process_id = request.json["id"]
             return db.get_process_temperature_csv(process_id)
     except Exception as e:
@@ -612,7 +612,10 @@ def send_temperature_alert():
   """
     try:
         if request.method == 'POST':
-            process_id = request.json['process_id']
+            process_id = request.json['physical_id']
+
+
+
             stage = db.get_process(process_id)['stage']
             timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
             description = 'ERROR: No se pudo medir la temperatura correctamente'
