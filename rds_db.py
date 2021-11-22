@@ -2,7 +2,7 @@ from resources.config import credentials as rds
 from pymysqlpool.pool import Pool
 import csv
 from io import StringIO
-from flask import Flask, make_response
+from flask import make_response
 
 
 pool = Pool(host=rds.HOST,
