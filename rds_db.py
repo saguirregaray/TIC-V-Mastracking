@@ -359,10 +359,10 @@ def get_free_fermenters():
                 SELECT f2.id 
                 FROM Processes p
                 JOIN Fermenters f2 ON f2.id = p.fermenter_id 
-                WHERE p.state = 1 and p.deleted = false and stage = 'fermentation')
+                WHERE p.state = 1 and p.deleted = false and (stage = 'fermentation' or stage = 'maduration'))
         ''')
-    conn.commit()
     fermenters = cur.fetchall()
+    conn.commit()
     pool.release(conn)
     return fermenters
 
