@@ -285,7 +285,7 @@ def get_free_carbonators():
                 SELECT c2.id 
                 FROM Processes p
                 JOIN Carbonators c2 ON c2.id = p.carbonator_id 
-                WHERE p.state = 1 and p.deleted = false)
+                WHERE p.state = 1 and p.deleted = false and stage = 'carbonation')
         ''')
     carbonators = cur.fetchall()
     conn.commit()
@@ -359,7 +359,7 @@ def get_free_fermenters():
                 SELECT f2.id 
                 FROM Processes p
                 JOIN Fermenters f2 ON f2.id = p.fermenter_id 
-                WHERE p.state = 1 and p.deleted = false)
+                WHERE p.state = 1 and p.deleted = false and stage = 'fermentation')
         ''')
     conn.commit()
     fermenters = cur.fetchall()
