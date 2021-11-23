@@ -708,5 +708,39 @@ def delete_mail():
         return e.__cause__
 
 
+'''GRAFICAS'''
+
+
+@cross_origin()
+@app.route('/process/last', methods=['get'])
+def get_last_processes():
+    """
+        This method returns the processes from the last 3 months
+
+        :return: processes from the last 3 months
+    """
+    try:
+        if request.method == 'GET':
+            return jsonify(result=db.get_last_processes())
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/process/temperature', methods=['post'])
+def get_process_temperature():
+    """
+        This method returns the temperatures and dates from the given process.
+
+        :return: list of temperatures
+    """
+    try:
+        if request.method == 'POST':
+            process_id = request.json['process_id']
+            return jsonify(result=db.get_process_temperature_json(process_id))
+    except Exception as e:
+        return e.__cause__
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0')

@@ -527,3 +527,39 @@ def delete_mail(mail_address):
     pool.release(conn)
     return mail
 
+
+'''GRAFICAS'''
+
+
+def get_process_temperature_json(process_id):
+    conn = pool.get_conn()
+    cur = conn.cursor()
+    cur.execute(f'''
+        SELECT  t.temperature,
+                t.target_temperature,
+                t.timestamp
+        FROM Processes p 
+        LEFT JOIN Temperatures t ON t.process_id = p.id
+        WHERE p.deleted = false and p.id = {process_id}
+    ''')
+    response = cur.fetchall()
+    conn.commit()
+    pool.release(conn)
+    return response
+
+
+def get_last_processes():
+    conn = pool.get_conn()
+    cur = conn.cursor()
+    cur.execute(f'''
+        SELECT  p.id,
+                p.name,
+                b.name as beer_name
+        FROM Processes p 
+        LEFT JOIN Beers b ON b.id = p.beer_id
+        WHERE p.deleted = false and date_add(p.fecha_inicio, INTERVAL 3 MONTH) 
+    ''')
+    response = cur.fetchall()
+    conn.commit()
+    pool.release(conn)
+    return response
