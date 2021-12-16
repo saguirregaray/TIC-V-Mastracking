@@ -555,7 +555,7 @@ def get_last_processes():
     cur.execute(f'''
         SELECT  p.id,
                 p.name,
-                b.name as beer_name
+                b.name as beer
         FROM Processes p 
         LEFT JOIN Beers b ON b.id = p.beer_id
         WHERE p.deleted = false and date_add(p.fecha_inicio, INTERVAL 3 MONTH) 
