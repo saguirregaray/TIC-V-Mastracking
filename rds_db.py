@@ -541,6 +541,7 @@ def get_process_temperature_json(process_id):
         FROM Processes p 
         LEFT JOIN Temperatures t ON t.process_id = p.id
         WHERE p.deleted = false and p.id = {process_id}
+        ORDER BY timestamp asc
     ''')
     response = cur.fetchall()
     conn.commit()
