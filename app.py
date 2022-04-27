@@ -127,7 +127,7 @@ def insert_process():
             ts = time.time()
             fecha_inicio = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
             fecha_fin = pymysql.NULL
-            now  = datetime.now()
+            now = datetime.now()
             name = str(now.year) + str(now.month) + str(now.day)
             state = 1
             stage = 'fermentation'
@@ -505,6 +505,44 @@ def modify_temperature():
             return db.insert_temperature(temperature, timestamp, process_id, target_temperature)
     except Exception as e:
         return e.__cause__
+
+
+''' DENSITY '''
+
+
+@cross_origin()
+@app.route('/density', methods=['post'])
+def insert_density():
+    """
+        This method receives a process_id and a density from arduino and inserts it into
+        the process.
+
+        :return: The status code of the insertion
+    """
+    try:
+        if request.method == 'POST':
+            process_id = request.json['process_id']
+            density = request.json['density']
+            return jsonify(result=db.insert_density(process_id, density))
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/density', methods=['get'])
+def get_density():
+    """
+        This method gets a density value from a given process_id.
+
+        :return: The density value
+    """
+    try:
+        if request.method == 'GET':
+            process_id = request.json['id']
+            return db.get_density(process_id)
+    except Exception as e:
+        return e.__cause__
+
 
 
 def get_physical_id(process):
