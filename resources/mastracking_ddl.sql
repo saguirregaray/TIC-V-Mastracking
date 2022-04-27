@@ -37,6 +37,7 @@ CREATE TABLE Processes (
 	alarm_hours_deactivated INT,
 	deleted boolean NOT NULL DEFAULT false,
 	name varchar(8),
+	density float,
 	PRIMARY KEY (id),
 	FOREIGN KEY (fermenter_id) REFERENCES Fermenters(id),
 	FOREIGN KEY (carbonator_id) REFERENCES Carbonators(id),

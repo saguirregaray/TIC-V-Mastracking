@@ -412,6 +412,28 @@ def get_temperature_by_process(process_id):
     return temperature
 
 
+'''DENSITY'''
+
+
+def insert_density(process_id, density):
+    conn = pool.get_conn()
+    cur = conn.cursor()
+    cur.execute(f"UPDATE Processes SET density = {density} WHERE id = {process_id}")
+    conn.commit()
+    pool.release(conn)
+    return get_density(cur.lastrowid)
+
+
+def get_density(process_id):
+    conn = pool.get_conn()
+    cur = conn.cursor()
+    cur.execute(f"SELECT density FROM Processes WHERE id = {process_id}  AND deleted = false")
+    density = cur.fetchone()
+    conn.commit()
+    pool.release(conn)
+    return density
+
+
 '''ALERTS'''
 
 
