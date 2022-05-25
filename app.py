@@ -521,7 +521,17 @@ def insert_density():
     """
     try:
         if request.method == 'POST':
-            process_id = request.json['process_id']
+            physical_id = request.json['physical_id']
+            active_processes = db.get_active_processes()
+            process_id = None
+            for process in active_processes:
+                if process['stage'] == 'fermentation' or process['stage'] == 'maduration':
+                    if process['fermenter_physical_id'] == physical_id:
+                        process_id = process['id']
+                        break
+                elif process['carbonator_physical_id'] == physical_id:
+                    process_id = process['id']
+                    break
             density = request.json['density']
             return jsonify(result=db.insert_density(process_id, density))
     except Exception as e:
@@ -538,11 +548,10 @@ def get_density():
     """
     try:
         if request.method == 'GET':
-            process_id = request.json['id']
+            process_id = request.json['process_id']
             return db.get_density(process_id)
     except Exception as e:
         return e.__cause__
-
 
 
 def get_physical_id(process):
@@ -674,7 +683,6 @@ def send_temperature_alert():
     try:
         if request.method == 'POST':
             physical_id = request.json['physical_id']
-
             active_processes = db.get_active_processes()
             process_id = None
             for process in active_processes:
