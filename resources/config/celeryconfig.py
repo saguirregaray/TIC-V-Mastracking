@@ -8,6 +8,6 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERYBEAT_SCHEDULE = {
     'monitor-every-1-hour': {
         'task': 'tasks.monitor',
-        'schedule': timedelta(hours=1)
+        'schedule': timedelta(minutes=1)
     },
 }
