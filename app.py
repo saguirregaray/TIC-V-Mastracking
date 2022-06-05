@@ -1,12 +1,12 @@
+import subprocess
 import time
+from datetime import datetime
 
 import pymysql
 from celery import Celery
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from flask_mail import Mail, Message
-from datetime import datetime
-import subprocess
 
 import rds_db as db
 from resources.config import celeryconfig
@@ -32,6 +32,11 @@ app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 
 # Alarm configuration
 app.config['THRESHOLD'] = 3
+app.config['WATER_TANK_THRESHOLD'] = 2
+app.config['WATER_TANK_TARGET_TEMP'] = 3
+
+# Density automation
+app.config['DENSITY_AUTOMATION'] = True
 
 # Initialize extensions
 mail = Mail(app)
@@ -44,11 +49,29 @@ celery.config_from_object(celeryconfig)
 '''EMAIL'''
 
 
+@cross_origin()
+@app.route('/eval_monitor', methods=['get'])
 @celery.task(name='tasks.monitor')
 def monitor():
     active_processes = db.get_active_processes()
     for process in active_processes:
         evaluate_alarm(process)
+        if app.config['DENSITY_AUTOMATION']:
+            evaluate_density(process)
+
+
+def evaluate_density(process):
+    try:
+        density = process["density"]
+        target_density = process['target_density']
+        process_id = process["id"]
+        current_stage = process["stage"]
+        machine_id = get_machine_id(process_id)
+
+        if current_stage == 'fermentation' and density is not None and density <= target_density:
+            db.modify_process_stage(process_id, current_stage, 'maduration', machine_id)
+    except Exception as e:
+        return e.__cause__
 
 
 def send_async_email_to_list(process_id, description, stage, timestamp):
@@ -82,10 +105,25 @@ def evaluate_alarm(process):
     temp = process['current_temperature']
     stage = process['stage']
     target_temp = process['target_temperature']
+    water_tank_temperature = db.get_water_tank_temperature(1)['temperature']
+
+    if abs(water_tank_temperature - app.config['WATER_TANK_TARGET_TEMP']) > app.config['WATER_TANK_THRESHOLD']:
+        create_water_tank_alert(water_tank_temperature, app.config['WATER_TANK_TARGET_TEMP'], process_id, stage, process)
 
     if temp is None or abs(temp - target_temp) >= app.config['THRESHOLD'] or (
             (datetime.now() - timestamp).seconds / 3600) > 1:
         create_alert(target_temp, temp, process_id, stage, process)
+
+
+def create_water_tank_alert(target_temp, water_tank_temperature, process_id, stage, process):
+    description = f"ERROR: La temperature objetivo del water_tank era: {target_temp}, pero la actual es: {water_tank_temperature}."
+    timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+    db.insert_alert(process_id, description, stage, timestamp)
+
+    if (process['alarm_activated'] or
+            (datetime.now() - process['alarm_deactivation_timestamp']).seconds / 3600
+            > process['alarm_hours_deactivated']):
+        send_async_email_to_list(process_id, description, stage, timestamp)
 
 
 def create_alert(target_temp, temp, process_id, stage, process):
@@ -97,6 +135,17 @@ def create_alert(target_temp, temp, process_id, stage, process):
             (datetime.now() - process['alarm_deactivation_timestamp']).seconds / 3600
             > process['alarm_hours_deactivated']):
         send_async_email_to_list(process_id, description, stage, timestamp)
+
+
+def get_machine_id(process_id):
+    process = db.get_process(process_id)
+    stage = process['stage']
+    if stage == "fermentation":
+        return db.get_fermenter(process['fermenter_id'])['id']
+    elif stage == "carbonation":
+        return db.get_carbonator(process['carbonator_id'])['id']
+    else:
+        return db.get_fermenter(process['fermenter_id'])['id']
 
 
 def get_physical_id(process_id):
@@ -554,6 +603,20 @@ def get_density():
         return e.__cause__
 
 
+@cross_origin()
+@app.route('/density-modifier', methods=['put'])
+def disable_density_automation():
+    """
+        This disables the automation for density changes.
+
+        :return: none
+    """
+    try:
+        DENSITY_AUTOMATION = False
+    except Exception as e:
+        return e.__cause__
+
+
 def get_physical_id(process):
     stage = process['stage']
     if stage == "fermentation":
@@ -562,6 +625,43 @@ def get_physical_id(process):
         return db.get_carbonator(process['carbonator_id'])['physical_id']
     else:
         return db.get_fermenter(process['fermenter_id'])['physical_id']
+
+
+'''WATER_TANK'''
+
+
+@cross_origin()
+@app.route('/water_tank/temperature', methods=['post'])
+def insert_water_tank_temperature():
+    """
+        This method receives a water_tank_id and inserts a temperature record
+
+        :return: The status code of the insertion
+    """
+    try:
+        if request.method == 'POST':
+            water_tank_id = 1
+            temperature = request.json['temperature']
+            ts = time.time()
+            timestamp = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+            return jsonify(result=db.insert_water_tank_temperature(water_tank_id, temperature, timestamp))
+    except Exception as e:
+        return e.__cause__
+
+
+@cross_origin()
+@app.route('/water_tank/temperature', methods=['get'])
+def get_water_tank_temperature():
+    """
+        This method gets a temperature value from a given water_tank_id.
+
+        :return: The density value
+    """
+    try:
+        if request.method == 'GET':
+            return db.get_water_tank_temperature(1)
+    except Exception as e:
+        return e.__cause__
 
 
 '''ALERTS'''

@@ -55,7 +55,7 @@ def get_active_processes():
          carbonator_physical_id, b.name as beer, b.id as beer_id,
           b.maduration_temp as maduration_temp, b.fermentation_temp as fermentation_temp,
           t.target_temperature as target_temperature, t.id as temp_id, p.alarm_activated, 
-          p.alarm_deactivation_timestamp, p.alarm_hours_deactivated, t.timestamp, p.name
+          p.alarm_deactivation_timestamp, p.alarm_hours_deactivated, t.timestamp, p.name, p.density, b.target_density
         FROM Processes p 
         LEFT JOIN Temperatures t ON t.process_id = p.id
         JOIN Fermenters f ON f.id = p.fermenter_id 
@@ -432,6 +432,30 @@ def get_density(process_id):
     conn.commit()
     pool.release(conn)
     return density
+
+
+'''WATER_TANK'''
+
+
+def get_water_tank_temperature(water_tank_id):
+    conn = pool.get_conn()
+    cur = conn.cursor()
+    cur.execute(f"SELECT temperature, timestamp FROM WaterTank WHERE water_tank_id = {water_tank_id} and "
+                f"timestamp in (SELECT max(timestamp) FROM WaterTank)")
+    temperature = cur.fetchone()
+    conn.commit()
+    pool.release(conn)
+    return temperature
+
+
+def insert_water_tank_temperature(water_tank_id, temperature, timestamp):
+    conn = pool.get_conn()
+    cur = conn.cursor()
+    cur.execute(f"INSERT INTO WaterTank (temperature, timestamp, water_tank_id) VALUES ({temperature}, '{timestamp}', "
+                f"{water_tank_id})")
+    conn.commit()
+    pool.release(conn)
+    return get_water_tank_temperature(1)
 
 
 '''ALERTS'''
