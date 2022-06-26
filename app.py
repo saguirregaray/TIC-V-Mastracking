@@ -24,7 +24,7 @@ app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = 'mastracking.um@gmail.com'
-app.config['MAIL_PASSWORD'] = 'Mastracking_uy'
+app.config['MAIL_PASSWORD'] = 'xtkgehzxcjqgvnwh'
 
 # Celery configuration
 app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
@@ -582,7 +582,10 @@ def insert_density():
                     process_id = process['id']
                     break
             density = request.json['density']
-            return jsonify(result=db.insert_density(process_id, density))
+            mass = request.json['mass']
+            volume = request.json['volume']
+            density_timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+            return jsonify(result=db.insert_density(process_id, density, mass, volume, density_timestamp))
     except Exception as e:
         return e.__cause__
 
