@@ -415,10 +415,11 @@ def get_temperature_by_process(process_id):
 '''DENSITY'''
 
 
-def insert_density(process_id, density):
+def insert_density(process_id, density, mass, volume, density_timestamp):
     conn = pool.get_conn()
     cur = conn.cursor()
-    cur.execute(f"UPDATE Processes SET density = {density} WHERE id = {process_id}")
+    cur.execute(f"UPDATE Processes SET density = {density}, mass = {mass}, volume = {volume}, "
+                f"density_timestamp = '{density_timestamp}' WHERE id = {process_id};")
     conn.commit()
     pool.release(conn)
     return get_density(cur.lastrowid)
@@ -427,7 +428,8 @@ def insert_density(process_id, density):
 def get_density(process_id):
     conn = pool.get_conn()
     cur = conn.cursor()
-    cur.execute(f"SELECT density FROM Processes WHERE id = {process_id}  AND deleted = false")
+    cur.execute(f"SELECT density, mass, volume, density_timestamp FROM Processes "
+                f"WHERE id = {process_id}  AND deleted = false")
     density = cur.fetchone()
     conn.commit()
     pool.release(conn)
