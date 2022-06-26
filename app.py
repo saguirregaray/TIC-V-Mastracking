@@ -537,15 +537,14 @@ def get_temperature():
 @app.route('/temperature', methods=['put'])
 def modify_temperature():
     """
-        This method gets a temperature record from a given process_id and modifies the target temperature
+        This method gets a temperature record from a given physical_id and modifies the target temperature
 
         :return: The temperature record
     """
     try:
         if request.method == 'PUT':
-            process_id = request.json['process_id']
-            process = db.get_process(process_id)
-            physical_id = get_physical_id(process)
+            physical_id = request.json['physical_id']
+            process_id = get_process_id_from_physical(physical_id)
             target_temperature = request.json['target_temperature']
             temperature = db.get_temperature_by_process(process_id)['temperature']
             timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
@@ -557,6 +556,17 @@ def modify_temperature():
 
 
 ''' DENSITY '''
+
+
+def get_process_id_from_physical(physical_id):
+    active_processes = db.get_active_processes()
+    process_id = None
+    for process in active_processes:
+        if process['stage'] == 'fermentation' or process['stage'] == 'maduration':
+            if process['fermenter_physical_id'] == physical_id:
+                return process['id']
+        elif process['carbonator_physical_id'] == physical_id:
+            return process['id']
 
 
 @cross_origin()
