@@ -110,9 +110,11 @@ def evaluate_alarm(process):
     if abs(water_tank_temperature - app.config['WATER_TANK_TARGET_TEMP']) > app.config['WATER_TANK_THRESHOLD']:
         create_water_tank_alert(water_tank_temperature, app.config['WATER_TANK_TARGET_TEMP'], process_id, stage, process)
 
-    if temp is None or abs(temp - target_temp) >= app.config['THRESHOLD'] or (
-            (datetime.now() - timestamp).seconds / 3600) > 1:
+    if temp is None or abs(temp - target_temp) >= app.config['THRESHOLD']:
         create_alert(target_temp, temp, process_id, stage, process)
+
+    if (datetime.now() - timestamp).seconds / 3600 > 1:
+        create_no_temp_alert(process_id, stage, process)
 
 
 def create_water_tank_alert(target_temp, water_tank_temperature, process_id, stage, process):
@@ -128,6 +130,17 @@ def create_water_tank_alert(target_temp, water_tank_temperature, process_id, sta
 
 def create_alert(target_temp, temp, process_id, stage, process):
     description = f"ERROR: La temperature objetivo era: {target_temp}, pero la actual es: {temp}."
+    timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+    db.insert_alert(process_id, description, stage, timestamp)
+
+    if (process['alarm_activated'] or
+            (datetime.now() - process['alarm_deactivation_timestamp']).seconds / 3600
+            > process['alarm_hours_deactivated']):
+        send_async_email_to_list(process_id, description, stage, timestamp)
+
+
+def create_no_temp_alert(process_id, stage, process):
+    description = f"ERROR: No se estan recibiendo temperaturas para el proceso {process_id}"
     timestamp = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
     db.insert_alert(process_id, description, stage, timestamp)
 
